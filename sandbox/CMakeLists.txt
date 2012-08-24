@@ -1,0 +1,39 @@
+cmake_minimum_required(VERSION 2.8)
+
+set(CMAKE_BUILD_TYPE Debug)
+
+#################################################
+AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/src SANDBOX_SOURCES)
+
+find_package(Gosu REQUIRED)
+
+set(SANDBOX_LIBRARIES
+	${Gosu_LIBRARIES}
+)
+
+set(SANDBOX_LIBRARY_DIRS
+	${Gosu_LIBRARY_DIRS}
+)
+
+set(SANDBOX_INCLUDE_DIRS
+	${Gosu_INCLUDE_DIRS}
+)
+
+## as seen from build folder
+set(SANDBOX_EXECUTABLE ../bin/Sandbox)
+
+ADD_EXECUTABLE(${SANDBOX_EXECUTABLE} ${SANDBOX_SOURCES})
+
+include_directories(${SANDBOX_INCLUDE_DIRS})
+LINK_DIRECTORIES(${SANDBOX_LIBRARY_DIRS})
+TARGET_LINK_LIBRARIES(${SANDBOX_EXECUTABLE} ${SANDBOX_LIBRARIES})
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	ADD_DEFINITIONS(-g -Wall -Wextra -pedantic -std=gnu++0x)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+	ADD_DEFINITIONS(-DNDEBUG -O2 -std=gnu++0x)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+	ADD_DEFINITIONS(-g -DNDEBUG -O2 -std=gnu++0x)
+else()
+	message(FATAL_ERROR "unknown build type: " ${CMAKE_BUILD_TYPE})
+endif()
