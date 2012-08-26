@@ -90,22 +90,22 @@ Matrix Matrix::fromCoordinateSystem(Vector right, Vector up, Vector front)
 Matrix Matrix::operator*(const Matrix& m2) const
 {
 	Matrix result;
-	result.m[0]  = m[0] * m2.m[0]  + m[4] * m2.m[1]  + m[8]  * m2.m[2]  + m[12] * m2.m[3];
-	result.m[1]  = m[1] * m2.m[0]  + m[5] * m2.m[1]  + m[9]  * m2.m[2]  + m[13] * m2.m[3];
-	result.m[2]  = m[2] * m2.m[0]  + m[6] * m2.m[1]  + m[10] * m2.m[2]  + m[14] * m2.m[3];
-	result.m[3]  = m[3] * m2.m[0]  + m[7] * m2.m[1]  + m[11] * m2.m[2]  + m[15] * m2.m[3];
-	result.m[4]  = m[0] * m2.m[4]  + m[4] * m2.m[5]  + m[8]  * m2.m[6]  + m[12] * m2.m[7];
-	result.m[5]  = m[1] * m2.m[4]  + m[5] * m2.m[5]  + m[9]  * m2.m[6]  + m[13] * m2.m[7];
-	result.m[6]  = m[2] * m2.m[4]  + m[6] * m2.m[5]  + m[10] * m2.m[6]  + m[14] * m2.m[7];
-	result.m[7]  = m[3] * m2.m[4]  + m[7] * m2.m[5]  + m[11] * m2.m[6]  + m[15] * m2.m[7];
-	result.m[8]  = m[0] * m2.m[8]  + m[4] * m2.m[9]  + m[8]  * m2.m[10] + m[12] * m2.m[11];
-	result.m[9]  = m[1] * m2.m[8]  + m[5] * m2.m[9]  + m[9]  * m2.m[10] + m[13] * m2.m[11];
-	result.m[10] = m[2] * m2.m[8]  + m[6] * m2.m[9]  + m[10] * m2.m[10] + m[14] * m2.m[11];
-	result.m[11] = m[3] * m2.m[8]  + m[7] * m2.m[9]  + m[11] * m2.m[10] + m[15] * m2.m[11];
-	result.m[12] = m[0] * m2.m[12] + m[4] * m2.m[13] + m[8]  * m2.m[14] + m[12] * m2.m[15];
-	result.m[13] = m[1] * m2.m[12] + m[5] * m2.m[13] + m[9]  * m2.m[14] + m[13] * m2.m[15];
-	result.m[14] = m[2] * m2.m[12] + m[6] * m2.m[13] + m[10] * m2.m[14] + m[14] * m2.m[15];
-	result.m[15] = m[3] * m2.m[12] + m[7] * m2.m[13] + m[11] * m2.m[14] + m[15] * m2.m[15];
+	result.m[0]  = m2.m[0] * this->m[0]  + m2.m[4] * this->m[1]  + m2.m[8]  * this->m[2]  + m2.m[12] * this->m[3];
+	result.m[1]  = m2.m[1] * this->m[0]  + m2.m[5] * this->m[1]  + m2.m[9]  * this->m[2]  + m2.m[13] * this->m[3];
+	result.m[2]  = m2.m[2] * this->m[0]  + m2.m[6] * this->m[1]  + m2.m[10] * this->m[2]  + m2.m[14] * this->m[3];
+	result.m[3]  = m2.m[3] * this->m[0]  + m2.m[7] * this->m[1]  + m2.m[11] * this->m[2]  + m2.m[15] * this->m[3];
+	result.m[4]  = m2.m[0] * this->m[4]  + m2.m[4] * this->m[5]  + m2.m[8]  * this->m[6]  + m2.m[12] * this->m[7];
+	result.m[5]  = m2.m[1] * this->m[4]  + m2.m[5] * this->m[5]  + m2.m[9]  * this->m[6]  + m2.m[13] * this->m[7];
+	result.m[6]  = m2.m[2] * this->m[4]  + m2.m[6] * this->m[5]  + m2.m[10] * this->m[6]  + m2.m[14] * this->m[7];
+	result.m[7]  = m2.m[3] * this->m[4]  + m2.m[7] * this->m[5]  + m2.m[11] * this->m[6]  + m2.m[15] * this->m[7];
+	result.m[8]  = m2.m[0] * this->m[8]  + m2.m[4] * this->m[9]  + m2.m[8]  * this->m[10] + m2.m[12] * this->m[11];
+	result.m[9]  = m2.m[1] * this->m[8]  + m2.m[5] * this->m[9]  + m2.m[9]  * this->m[10] + m2.m[13] * this->m[11];
+	result.m[10] = m2.m[2] * this->m[8]  + m2.m[6] * this->m[9]  + m2.m[10] * this->m[10] + m2.m[14] * this->m[11];
+	result.m[11] = m2.m[3] * this->m[8]  + m2.m[7] * this->m[9]  + m2.m[11] * this->m[10] + m2.m[15] * this->m[11];
+	result.m[12] = m2.m[0] * this->m[12] + m2.m[4] * this->m[13] + m2.m[8]  * this->m[14] + m2.m[12] * this->m[15];
+	result.m[13] = m2.m[1] * this->m[12] + m2.m[5] * this->m[13] + m2.m[9]  * this->m[14] + m2.m[13] * this->m[15];
+	result.m[14] = m2.m[2] * this->m[12] + m2.m[6] * this->m[13] + m2.m[10] * this->m[14] + m2.m[14] * this->m[15];
+	result.m[15] = m2.m[3] * this->m[12] + m2.m[7] * this->m[13] + m2.m[11] * this->m[14] + m2.m[15] * this->m[15];
 	return result;
 }
 
@@ -126,12 +126,16 @@ Matrix Matrix::fromTranslation(Vector t)
 
 Matrix& Matrix::translate(Vector v)
 {
-	return (*this) *= Matrix::fromTranslation(v);
+	Vector t = (*this)*v;
+	m[3] = t.x;
+	m[7] = t.y;
+	m[11] = t.z;
+	return (*this);
 }
 
 Matrix Matrix::translated(Vector v) const
 {
-	return (*this) * Matrix::fromTranslation(v);
+	return Matrix(*this).translate(v);
 }
 
 Matrix Matrix::fromScale(Vector scale)
@@ -172,8 +176,8 @@ Matrix Matrix::transposed() const
 Vector Matrix::operator*(const Vector& v) const
 {
 	Vector result;
-	result.x = ((m[0] * v.x) + (m[4] * v.y) + (m[8]  * v.z) + m[12]);
-	result.y = ((m[1] * v.x) + (m[5] * v.y) + (m[9]  * v.z) + m[13]);
-	result.z = ((m[2] * v.x) + (m[6] * v.y) + (m[10] * v.z) + m[14]);
+	result.x = ((m[0] * v.x) + (m[1] * v.y) + (m[2]  * v.z) + m[3]);
+	result.y = ((m[4] * v.x) + (m[5] * v.y) + (m[6]  * v.z) + m[7]);
+	result.z = ((m[8] * v.x) + (m[9] * v.y) + (m[10] * v.z) + m[11]);
 	return result;
 }
