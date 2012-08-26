@@ -3,9 +3,13 @@
 
 #include "page.h" // Base class: Page
 #include <Gosu/Color.hpp>
+#include <Gosu/Font.hpp>
+#include <iostream>
+#include <cassert>
+#include "Vector.h"
+#include "Quaternion.h"
 
-struct dxyz
-{
+struct dxyz {
 	dxyz():x(0),y(0),z(0) {}
 	double x, y, z;
 };
@@ -21,17 +25,15 @@ static const double s_to_y = 1.0/31557600.0;
 static const double min_to_y = 1.0/525960.0;
 static const double h_to_y = 1.0/8766.0;
 
-struct Position
-{
-	int64_t x, y, z; // in ls
-	Position():x(0),y(0),z(0) {}
-};
 
-struct Temperature
+inline std::wostream& operator<<(std::wostream& o, const Vector& pos)
 {
+	return o << "(" << pos.x << ", " << pos.y << ", " << pos.z << ")";
+}
+
+struct Temperature {
 	uint32_t kelvin;
-	Gosu::Color color() const
-	{
+	Gosu::Color color() const {
 		if (kelvin <= 2600) {
 			return Gosu::Color(255*2600/kelvin, 0, 0);
 		} else if(kelvin <= 6000) {
@@ -47,38 +49,43 @@ struct Temperature
 	}
 };
 
-struct Star
-{
+struct Star {
 private:
 	static size_t cur_id;
 public:
-	Star()
-	{
+	Star() {
 		id = cur_id;
 		cur_id++;
 	}
 	size_t id;
-	Position pos;
+	Vector pos;
 	Temperature temp;
-	bool operator<(const Star& rhs) const { return id < rhs.id; }
+	bool operator<(const Star& rhs) const {
+		return id < rhs.id;
+	}
 };
 
 #include <set>
 
-class SpacePage : public Page {
+class SpacePage : public Page
+{
 
 private:
 	std::set<Star> m_sStars;
-	Position pos;
+	Vector m_posPlayer;
 	SpacePage(const SpacePage& rhs);
 	SpacePage& operator=(const SpacePage& rhs);
-	
-	double horizontal_angle, vertical_angle;
+	Gosu::Font m_Font;
 
+	Quaternion m_rotPlayer;
+	void setupDirs();
+	void rotateDegrees(Vector axis, double angle);
 public:
 	SpacePage();
 	~SpacePage();
 	virtual void update();
+	bool needsCursor() const;
+
 	virtual void draw();
 
 };

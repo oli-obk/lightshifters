@@ -22,6 +22,12 @@
     <File Name="src/default_page.cpp"/>
     <File Name="src/space_page.h"/>
     <File Name="src/space_page.cpp"/>
+    <File Name="src/Matrix.h"/>
+    <File Name="src/Quaternion.h"/>
+    <File Name="src/Vector.h"/>
+    <File Name="src/Matrix.cpp"/>
+    <File Name="src/Quaternion.cpp"/>
+    <File Name="src/Vector.cpp"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
@@ -42,6 +48,8 @@
       <General OutputFile="" IntermediateDirectory="/home/oliver/Projects/lightshifters/sandbox/bin" Command="Sandbox" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[
+      
+      
       ]]>
       </Environment>
       <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
@@ -79,6 +87,8 @@
       <General OutputFile="" IntermediateDirectory="./Release" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[
+      
+      
       
       ]]>
       </Environment>
