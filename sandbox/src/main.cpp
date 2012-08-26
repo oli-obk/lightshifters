@@ -8,15 +8,13 @@ int main(int argc, char* argv[])
 {
 	Config* config = Config::Instance();
 	config->loadArgs(argc, argv);
-	config->setFile("$HOME/.lightshifters");
+	config->setFile("config");
 	
 	PageManager* man = PageManager::Instance();
 	man->setCaption(L"Lightshifters SiO2 []");
-	man->graphics().setResolution(
-		config->get<unsigned>("screenWidth", 1024),
-		config->get<unsigned>("screenHeight", 768)
-			);
 	man->load<SpacePage>();
 	man->show();
+	man->Release();
+	config->Release();
 	return 0;
 }

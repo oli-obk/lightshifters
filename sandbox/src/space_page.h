@@ -68,6 +68,9 @@ private:
 	Quaternion m_rotPlayer;
 	void setupDirs();
 	void rotateDegrees(Vector axis, double angle);
+	Gosu::Button m_kbForward, m_kbBackward, m_kbStrafeRight, m_kbStrafeLeft;
+	Gosu::Button m_kbStrafeUp, m_kbStrafeDown, m_kbSpinLeft, m_kbSpinRight;
+	bool m_bInvertMouse;
 public:
 	SpacePage();
 	~SpacePage();

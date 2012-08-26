@@ -28,7 +28,6 @@ private:
 	void parse(std::string, bool permanent);
 	Config();
 	~Config();
-
 };
 
 #include <sstream>

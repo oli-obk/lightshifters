@@ -1,11 +1,14 @@
 #include "page_manager.h"
 #include "default_page.h"
 #include <cassert>
+#include "config.h"
 
 PageManager* PageManager::ms_instance = 0;
 
 PageManager::PageManager()
-:Gosu::Window(800, 600, false)
+:Gosu::Window(Config::Instance()->get<unsigned>("screenWidth", 1024),
+			Config::Instance()->get<unsigned>("screenHeight", 768)
+			, false)
 {
 }
 

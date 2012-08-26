@@ -1,3 +1,4 @@
+#include "config.h"
 #include "renderable.h"
 #include "space_page.h"
 
@@ -24,7 +25,19 @@ SpacePage::SpacePage()
 		uint32_t temp = tempgen(engine);
 		m_sStars.insert(std::move(std::unique_ptr<Renderable>(new Renderable(L"trollface.png", pos, 0.01, Temperature(temp).color()))));
 	}
-	PageManager::Instance()->input().setMousePosition(100, 100);
+	Gosu::Input& i = PageManager::Instance()->input();
+	i.setMousePosition(100, 100);
+	Config& config = *Config::Instance();
+	m_bInvertMouse = config.get<bool>("InvertMouse", false);
+	m_kbForward = i.keyCodeToId(config.get<size_t>("keyForward", 25));
+	m_kbBackward = i.keyCodeToId(config.get<size_t>("keyBackward", 39));
+	m_kbStrafeRight = i.keyCodeToId(config.get<size_t>("keyStrafeRight", 40));
+	m_kbStrafeLeft = i.keyCodeToId(config.get<size_t>("keyStrafeLeft", 38));
+	m_kbStrafeUp = i.keyCodeToId(config.get<size_t>("keyStrafeUp", 27));
+	m_kbStrafeDown = i.keyCodeToId(config.get<size_t>("keyStrafeDown", 41));
+	m_kbSpinLeft = i.keyCodeToId(config.get<size_t>("keySpinLeft", 24));
+	m_kbSpinRight = i.keyCodeToId(config.get<size_t>("keySpinRight", 26));
+	
 }
 
 SpacePage::~SpacePage()
@@ -66,10 +79,11 @@ void SpacePage::rotateDegrees(Vector axis, double angle)
 void SpacePage::update()
 {
 	Gosu::Input& i = PageManager::Instance()->input();
-	if (i.down(Gosu::kbL)) {
-		rotateDegrees(Vector::FORWARD, 1);
-	} else if(i.down(Gosu::kbX)) {
+	
+	if (i.down(m_kbSpinLeft)) {
 		rotateDegrees(Vector::FORWARD, -1);
+	} else if(i.down(m_kbSpinRight)) {
+		rotateDegrees(Vector::FORWARD, 1);
 	}
 	double shiftx = i.mouseX()-100.0;
 	double shifty = i.mouseY()-100.0;
@@ -78,23 +92,27 @@ void SpacePage::update()
 		i.setMousePosition(100, 100);
 	}
 	if (shifty != 0) {
-		rotateDegrees(Vector::RIGHT, -shifty);
+		if (m_bInvertMouse) {
+			rotateDegrees(Vector::RIGHT, shifty);
+		} else {
+			rotateDegrees(Vector::RIGHT, -shifty);
+		}
 		i.setMousePosition(100, 100);
 	}
 	Vector dir(0, 0, 0);
-	if (i.down(Gosu::kbV)) {
+	if (i.down(m_kbForward)) {
 		dir += Vector::FORWARD;
-	} else if(i.down(Gosu::kbI)) {
+	} else if(i.down(m_kbBackward)) {
 		dir -= Vector::FORWARD;
 	}
-	if (i.down(Gosu::kbU)) {
-		dir += Vector::RIGHT;
-	} else if(i.down(Gosu::kbA)) {
+	if (i.down(m_kbStrafeRight)) {
 		dir -= Vector::RIGHT;
+	} else if(i.down(m_kbStrafeLeft)) {
+		dir += Vector::RIGHT;
 	}
-	if (i.down(Gosu::kbC)) {
+	if (i.down(m_kbStrafeUp)) {
 		dir += Vector::UP;
-	} else if(i.down(Gosu::kbE)) {
+	} else if(i.down(m_kbStrafeDown)) {
 		dir -= Vector::UP;
 	}
 	double speed = 1.0;
