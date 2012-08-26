@@ -2,7 +2,7 @@
 <CodeLite_Project Name="sandbox" InternalType="">
   <Plugins>
     <Plugin Name="qmake">
-      <![CDATA[00010001N0005Debug000000000000]]>
+      <![CDATA[00020001N0005Debug0000000000000001N0007Release000000000000]]>
     </Plugin>
   </Plugins>
   <Description/>
@@ -28,6 +28,10 @@
     <File Name="src/Matrix.cpp"/>
     <File Name="src/Quaternion.cpp"/>
     <File Name="src/Vector.cpp"/>
+    <File Name="src/renderable.h"/>
+    <File Name="src/renderable.cpp"/>
+    <File Name="src/spherical_coordinate.h"/>
+    <File Name="src/spherical_coordinate.cpp"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
@@ -48,6 +52,8 @@
       <General OutputFile="" IntermediateDirectory="/home/oliver/Projects/lightshifters/sandbox/bin" Command="Sandbox" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[
+      
+      
       
       
       ]]>
@@ -72,7 +78,7 @@
         <CustomPostBuild/>
         <CustomPreBuild/>
       </AdditionalRules>
-      <Completion>
+      <Completion EnableCpp11="no">
         <ClangCmpFlags/>
         <ClangPP/>
         <SearchPaths/>
@@ -84,19 +90,17 @@
       </Compiler>
       <Linker Options="-O2" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="" IntermediateDirectory="./Release" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <General OutputFile="" IntermediateDirectory="/home/oliver/Projects/lightshifters/sandbox/bin" Command="/home/oliver/Projects/lightshifters/sandbox/bin/Sandbox" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
-        <![CDATA[
-      
-      
-      
-      ]]>
+        <![CDATA[]]>
       </Environment>
       <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
         <PostConnectCommands/>
         <StartupCommands/>
       </Debugger>
-      <PreBuild/>
+      <PreBuild>
+        <Command Enabled="yes">cmake ..</Command>
+      </PreBuild>
       <PostBuild/>
       <CustomBuild Enabled="yes">
         <RebuildCommand/>
@@ -106,13 +110,13 @@
         <SingleFileCommand/>
         <MakefileGenerationCommand/>
         <ThirdPartyToolName>None</ThirdPartyToolName>
-        <WorkingDirectory>$(WorkspacePath)</WorkingDirectory>
+        <WorkingDirectory>/home/oliver/Projects/lightshifters/sandbox/build</WorkingDirectory>
       </CustomBuild>
       <AdditionalRules>
         <CustomPostBuild/>
         <CustomPreBuild/>
       </AdditionalRules>
-      <Completion>
+      <Completion EnableCpp11="no">
         <ClangCmpFlags/>
         <ClangPP/>
         <SearchPaths/>

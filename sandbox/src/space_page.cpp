@@ -1,3 +1,4 @@
+#include "renderable.h"
 #include "space_page.h"
 
 #include <random>
@@ -11,22 +12,17 @@
 #include <sstream>
 #include "Matrix.h"
 
-size_t Star::cur_id = 0;
-
 SpacePage::SpacePage()
 	:m_Font(PageManager::Instance()->graphics(), Gosu::defaultFontName(), 20)
 	,m_rotPlayer(Quaternion::identity())
 {
 	std::uniform_int_distribution<int64_t> posgen(-1000, 1000);
-	std::uniform_int_distribution<uint32_t> temgen(0, 60000);
+	std::uniform_int_distribution<uint32_t> tempgen(0, 60000);
 	std::mt19937 engine; // Mersenne twister MT19937
-	for(int i = 0; i < 1000; i++) {
-		Star newstar;
-		newstar.pos.x = posgen(engine);
-		newstar.pos.y = posgen(engine);
-		newstar.pos.z = posgen(engine);
-		newstar.temp.kelvin = temgen(engine);
-		m_sStars.insert(newstar);
+	for(int i = 0; i < 100; i++) {
+		Vector pos(posgen(engine), posgen(engine), posgen(engine));
+		uint32_t temp = tempgen(engine);
+		m_sStars.insert(std::move(std::unique_ptr<Renderable>(new Renderable(L"trollface.png", pos, 0.01, Temperature(temp).color()))));
 	}
 	PageManager::Instance()->input().setMousePosition(100, 100);
 }
@@ -41,22 +37,8 @@ void SpacePage::draw()
 	double wdt = g.width();
 	double hgt = g.height();
 	Matrix mat = m_rotPlayer.inverted().toMatrix().translated(-m_posPlayer);
-	for (const Star& s:m_sStars) {
-		Gosu::Color c = s.temp.color();
-		Vector rel = mat * s.pos;
-		double dist = rel.magnitude();
-		double hangle = atan2(-rel.z, rel.x) - M_PI/2;
-		//if (rel.z > 0) hangle = M_PI - hangle;
-		double vangle = acos(rel.y/dist)-M_PI/2;
-		vangle *= 2;
-		//if (rel.z > 0) vangle = M_PI - vangle;
-		
-		double x = Gosu::wrap(hangle/M_PI/2*wdt - wdt/2, 0.0, wdt);
-		double y = Gosu::wrap(vangle/M_PI/2*hgt - hgt/2, 0.0, hgt);
-		
-		
-		double size = std::max(1.0, 1000.0/(dist+1));
-		g.drawQuad(x-size, y-size, c, x+size, y-size, c, x+size, y+size, c, x-size, y+size, c, -dist);
+	for (const std::unique_ptr<Renderable>& obj:m_sStars) {
+		obj->draw(mat);
 	}
 	double xn = wdt*.25;
 	double xp = wdt*.75;

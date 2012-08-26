@@ -22,6 +22,7 @@
 
 #include "Vector.h"
 #include <cmath>
+#include "spherical_coordinate.h"
 
 const Vector Vector::UP = Vector(0, 1, 0);
 const Vector Vector::FORWARD = Vector(0, 0, -1);
@@ -110,4 +111,10 @@ bool Vector::operator==(const Vector& v) const
 Vector Vector::operator-() const
 {
 	return Vector(-x, -y, -z);
+}
+
+SphericalCoordinate Vector::toSphericalCoordinate() const
+{
+	double mag = magnitude();
+	return SphericalCoordinate(mag, atan2(-z, x), acos(y/mag));
 }

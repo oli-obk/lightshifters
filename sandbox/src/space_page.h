@@ -1,6 +1,7 @@
 #ifndef SPACEPAGE_H
 #define SPACEPAGE_H
 
+#include <Gosu/Image.hpp>
 #include "page.h" // Base class: Page
 #include <Gosu/Color.hpp>
 #include <Gosu/Font.hpp>
@@ -31,7 +32,9 @@ inline std::wostream& operator<<(std::wostream& o, const Vector& pos)
 	return o << "(" << pos.x << ", " << pos.y << ", " << pos.z << ")";
 }
 
-struct Temperature {
+struct Temperature
+{
+	Temperature(uint32_t k):kelvin(k) {}
 	uint32_t kelvin;
 	Gosu::Color color() const {
 		if (kelvin <= 2600) {
@@ -49,34 +52,19 @@ struct Temperature {
 	}
 };
 
-struct Star {
-private:
-	static size_t cur_id;
-public:
-	Star() {
-		id = cur_id;
-		cur_id++;
-	}
-	size_t id;
-	Vector pos;
-	Temperature temp;
-	bool operator<(const Star& rhs) const {
-		return id < rhs.id;
-	}
-};
-
 #include <set>
+#include <memory>
+struct Renderable;
 
 class SpacePage : public Page
 {
 
 private:
-	std::set<Star> m_sStars;
+	std::set<std::unique_ptr<Renderable> > m_sStars;
 	Vector m_posPlayer;
 	SpacePage(const SpacePage& rhs);
 	SpacePage& operator=(const SpacePage& rhs);
 	Gosu::Font m_Font;
-
 	Quaternion m_rotPlayer;
 	void setupDirs();
 	void rotateDegrees(Vector axis, double angle);
