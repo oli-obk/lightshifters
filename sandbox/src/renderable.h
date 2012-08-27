@@ -72,8 +72,6 @@ private:
 	void forceID(RenderableID id);
 	void deserialize(const Packet& p);
 protected:
-	double screenX(const SphericalCoordinate& sc);
-	double screenY(const SphericalCoordinate& sc);
 	Renderable();
 public:
 	void serialize(Packet& p) const;
@@ -87,7 +85,7 @@ public:
 	Vector getPosition() const;
 	Gosu::Color getColor() const;
 	void setPosition(Vector v);
-	virtual void draw(const Matrix& mat);
+	virtual void draw(const Matrix& mat, double wdt, double hgt);
 	Renderable(const Packet& p);
 	virtual ~Renderable();
 	void setImageName(std::wstring name);

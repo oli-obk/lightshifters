@@ -80,7 +80,7 @@ void SpacePage::draw()
 	Matrix mat = m_rotPlayer.inverted().toMatrix().translated(-m_posPlayer);
 	for (auto& it: m_mEntities) {
 		const std::unique_ptr<Renderable>& obj = it.second;
-		obj->draw(mat);
+		obj->draw(mat, wdt, hgt);
 	}
 	double xn = wdt*.25;
 	double xp = wdt*.75;
@@ -114,12 +114,14 @@ void SpacePage::update()
 	} else if (i.down(m_kbSpinRight)) {
 		rotateDegrees(Vector::FORWARD, 1);
 	}
-	double shiftx = double(i.mouseX())-double(Gosu::screenWidth()/2);
-	double shifty = double(i.mouseY())-double(Gosu::screenHeight()/2);
+	double wdt = PageManager::Instance()->graphics().width();
+	double hgt = PageManager::Instance()->graphics().height();
+	double shiftx = double(i.mouseX())-double(wdt/2);
+	double shifty = double(i.mouseY())-double(hgt/2);
 	double mousespeed = 0.1;
 	if (shiftx != 0) {
 		rotateDegrees(Vector::UP, shiftx*mousespeed);
-		i.setMousePosition(Gosu::screenWidth()/2, Gosu::screenHeight()/2);
+		i.setMousePosition(wdt/2, hgt/2);
 	}
 	if (shifty != 0) {
 		if (m_bInvertMouse) {
@@ -127,7 +129,7 @@ void SpacePage::update()
 		} else {
 			rotateDegrees(Vector::RIGHT, -shifty*mousespeed);
 		}
-		i.setMousePosition(Gosu::screenWidth()/2, Gosu::screenHeight()/2);
+		i.setMousePosition(wdt/2, hgt/2);
 	}
 	Vector dir(0, 0, 0);
 	if (i.down(m_kbForward)) {
