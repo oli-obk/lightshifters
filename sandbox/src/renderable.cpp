@@ -151,14 +151,15 @@ void Renderable::deserialize(const Packet& p)
 void Renderable::setType(std::string type)
 {
 	m_Type = type;
+	if (m_Type == "player") {
+		setImageName(L"sphere.png");
+	}
+	setImageName(L"trollface.png");
 }
 
 std::wstring Renderable::getImageName() const
 {
-	if (m_Type == "player") {
-		return L"sphere.png";
-	}
-	return L"trollface.png";
+	return m_ImageName;
 }
 
 void Renderable::setImageName(std::wstring name)
@@ -169,4 +170,26 @@ void Renderable::setImageName(std::wstring name)
 Renderable::Renderable(const Packet& p)
 {
 	deserialize(p);
+}
+
+Renderable Renderable::temporary()
+{
+	return Renderable(false);
+}
+
+Renderable::Renderable(Renderable && other)
+{
+	m_Color = other.m_Color;
+	m_ImageName = other.m_ImageName;
+	m_Position = other.m_Position;
+	m_Scale = other.m_Scale;
+	m_Type = other.m_Type;
+	m_myID = other.m_myID;
+	other.m_myID = InvalidRenderableID;
+}
+
+Renderable::Renderable(bool)
+{
+	m_Scale = 1.0;
+	m_Color = Gosu::Colors::white;
 }

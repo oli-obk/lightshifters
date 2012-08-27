@@ -73,7 +73,10 @@ private:
 	void deserialize(const Packet& p);
 protected:
 	Renderable();
+	Renderable(bool);
 public:
+	Renderable(Renderable &&);
+	static Renderable temporary();
 	void serialize(Packet& p) const;
 	void setScale(double scale);
 	double getScale() const;

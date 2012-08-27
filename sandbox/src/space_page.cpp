@@ -78,9 +78,29 @@ void SpacePage::draw()
 	double wdt = g.width();
 	double hgt = g.height();
 	Matrix mat = m_rotPlayer.inverted().toMatrix().translated(-m_posPlayer);
+	Vector closestPos;
+	double closestDist;
+	bool hasClosest = false;
 	for (auto& it: m_mEntities) {
 		const std::unique_ptr<Renderable>& obj = it.second;
+		if (obj->getType() == "troll") {
+			double dist = (m_posPlayer - obj->getPosition()).magnitudeSquared();
+			if (closestDist > dist || !hasClosest) {
+				closestDist = dist;
+				hasClosest = true;
+				closestPos = obj->getPosition();
+			}
+		}
 		obj->draw(mat, wdt, hgt);
+	}
+	if (hasClosest) {
+		Renderable rend = Renderable::temporary();
+		rend.setImageName(L"sphere.png");
+		rend.setScale(0.02);
+		Gosu::Color col = Gosu::Colors::green;
+		rend.setColor(col);
+		rend.setPosition(closestPos);
+		rend.draw(mat, wdt, hgt);
 	}
 	double xn = wdt*.25;
 	double xp = wdt*.75;
