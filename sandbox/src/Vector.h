@@ -27,6 +27,7 @@ struct SphericalCoordinate;
 
 struct Vector {
 	static const Vector UP, FORWARD, RIGHT;
+	typedef double type;
 	double x;
 	double y;
 	double z;

@@ -31,8 +31,14 @@ private:
 };
 
 #include <sstream>
+#include <Gosu/Input.hpp>
 
-template<typename T> T Config::get(std::string key, T def)
+template<> inline Gosu::Button Config::get(std::string key, Gosu::Button def)
+{
+	return Gosu::Button(get(key, def.id()));
+}
+
+template<typename T> inline T Config::get(std::string key, T def)
 {
 	std::map<std::string, std::string>::const_iterator it = m_mTemp.find(key);
 	std::string value;

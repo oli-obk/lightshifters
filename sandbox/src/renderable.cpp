@@ -28,9 +28,12 @@
 #include <cmath>
 #include "page_manager.h"
 #include <Gosu/Graphics.hpp>
+#include <cassert>
+#include "packet.h"
 
 
 std::map<std::wstring, Gosu::Image> Renderable::s_Images;
+RenderableID Renderable::s_curID = 0;
 
 Gosu::Image& Renderable::getImage(std::wstring name)
 {
@@ -42,12 +45,12 @@ Gosu::Image& Renderable::getImage(std::wstring name)
 	return it2.first->second;
 }
 
-Renderable::Renderable(std::wstring imagename, Vector pos, double scale, Gosu::Color col)
-:m_Position(pos)
-,m_rImage(getImage(imagename))
-,m_Scale(scale)
-,m_Color(col)
+Renderable::Renderable()
 {
+	m_Scale = 1.0;
+	setColor(Gosu::Colors::white);
+	m_myID = s_curID;
+	s_curID++;
 }
 
 Renderable::~Renderable()
@@ -69,8 +72,9 @@ double Renderable::screenY(const SphericalCoordinate& sc)
 void Renderable::draw(const Matrix& mat)
 {
 	SphericalCoordinate sc = (mat * m_Position).toSphericalCoordinate();
+	if(sc.distance < 10.0) return; // "clipping"
 	double size = std::max(1.0, 1000.0/(sc.distance+1));
-	m_rImage.drawRot(screenX(sc), screenY(sc), -sc.distance, 0, 0.5, 0.5, size*m_Scale, size*m_Scale, m_Color);
+	getImage(getImageName()).drawRot(screenX(sc), screenY(sc), -sc.distance, 0, 0.5, 0.5, size*m_Scale, size*m_Scale, m_Color);
 }
 
 Vector Renderable::getPosition() const
@@ -83,3 +87,79 @@ void Renderable::setPosition(Vector v)
 	m_Position = v;
 }
 
+RenderableID Renderable::getID() const
+{
+	return m_myID;
+}
+
+Gosu::Color Renderable::getColor() const
+{
+	return m_Color;
+}
+
+void Renderable::setColor(Gosu::Color col)
+{
+	m_Color = col;
+}
+
+std::string Renderable::getType() const
+{
+	return m_Type;
+}
+
+void Renderable::forceID(RenderableID id)
+{
+	assert(s_curID == 0);
+	m_myID = id;
+}
+
+void Renderable::setScale(double scale)
+{
+	m_Scale = scale;
+}
+
+double Renderable::getScale() const
+{
+	return m_Scale;
+}
+
+void Renderable::serialize(Packet& p) const
+{
+	p.write(getID());
+	p.write(getType());
+	p.write(getColor().argb());
+	p.write(getPosition());
+	p.write(getScale());
+}
+
+void Renderable::deserialize(const Packet& p)
+{
+	forceID(p.read<RenderableID>());
+	setType(p.read<std::string>());
+	setColor(p.read<uint32_t>());
+	setPosition(p.read<Vector>());
+	setScale(p.read<double>());
+}
+
+void Renderable::setType(std::string type)
+{
+	m_Type = type;
+}
+
+std::wstring Renderable::getImageName() const
+{
+	if (m_Type == "player") {
+		return L"sphere.png";
+	}
+	return L"trollface.png";
+}
+
+void Renderable::setImageName(std::wstring name)
+{
+	m_ImageName = name;
+}
+
+Renderable::Renderable(const Packet& p)
+{
+	deserialize(p);
+}

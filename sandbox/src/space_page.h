@@ -1,6 +1,7 @@
 #ifndef SPACEPAGE_H
 #define SPACEPAGE_H
 
+#include <Gosu/Sockets.hpp>
 #include <Gosu/Image.hpp>
 #include "page.h" // Base class: Page
 #include <Gosu/Color.hpp>
@@ -32,35 +33,19 @@ inline std::wostream& operator<<(std::wostream& o, const Vector& pos)
 	return o << "(" << pos.x << ", " << pos.y << ", " << pos.z << ")";
 }
 
-struct Temperature
-{
-	Temperature(uint32_t k):kelvin(k) {}
-	uint32_t kelvin;
-	Gosu::Color color() const {
-		if (kelvin <= 2600) {
-			return Gosu::Color(255*2600/kelvin, 0, 0);
-		} else if(kelvin <= 6000) {
-			return Gosu::Color(255, 255*(6000-2600)/(kelvin-2600), 0);
-		} else if(kelvin <= 10000) {
-			return Gosu::Color(255, 255, 255*(10000-6000)/(kelvin-6000));
-		} else if(kelvin <= 33000) {
-			int val = 255-(255-100)*(33000-10000)/(kelvin-10000);
-			return Gosu::Color(val, val, 255);
-		} else {
-			return Gosu::Color(100, 100, 255);
-		}
-	}
-};
 
 #include <set>
 #include <memory>
-struct Renderable;
+#include "renderable.h"
+struct Packet;
+
+typedef uint32_t PlayerID;
 
 class SpacePage : public Page
 {
 
 private:
-	std::set<std::unique_ptr<Renderable> > m_sStars;
+	std::map<RenderableID, std::unique_ptr<Renderable> > m_mEntities;
 	Vector m_posPlayer;
 	SpacePage(const SpacePage& rhs);
 	SpacePage& operator=(const SpacePage& rhs);
@@ -71,7 +56,18 @@ private:
 	Gosu::Button m_kbForward, m_kbBackward, m_kbStrafeRight, m_kbStrafeLeft;
 	Gosu::Button m_kbStrafeUp, m_kbStrafeDown, m_kbSpinLeft, m_kbSpinRight;
 	bool m_bInvertMouse;
+	std::unique_ptr<Gosu::ListenerSocket> m_pListenerSocket;
+	typedef std::set<std::unique_ptr<Gosu::CommSocket>> SocketSet;
+	SocketSet m_sCommSockets;
+	void generateSpace();
+	void onConnection(Gosu::Socket& sock);
+	void onDisconnection(SocketSet::iterator);
+	void onReceive(PlayerID, const void*, std::size_t);
+	PlayerID m_pidNext, m_pidMine;
+	std::map<PlayerID, RenderableID> m_mPlayerIDToRenderable;
+	size_t m_uTrollsCaught;
 public:
+	void sendPacketToAll(const Packet& p);
 	SpacePage();
 	~SpacePage();
 	virtual void update();
