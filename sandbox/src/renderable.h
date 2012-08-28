@@ -30,14 +30,16 @@ struct Temperature {
 	Temperature(uint32_t k):kelvin(k) {}
 	uint32_t kelvin;
 	Gosu::Color color() const {
-		if (kelvin <= 2600) {
-			return Gosu::Color(255*2600/kelvin, 0, 0);
-		} else if(kelvin <= 6000) {
-			return Gosu::Color(255, 255*(6000-2600)/(kelvin-2600), 0);
-		} else if(kelvin <= 10000) {
-			return Gosu::Color(255, 255, 255*(10000-6000)/(kelvin-6000));
-		} else if(kelvin <= 33000) {
-			int val = 255-(255-100)*(33000-10000)/(kelvin-10000);
+		if (kelvin <= 300) {
+			return Gosu::Color(255*300/2600, 0, 0);
+		} else if (kelvin <= 2600) {
+			return Gosu::Color(255*kelvin/2600, 0, 0);
+		} else if (kelvin <= 6000) {
+			return Gosu::Color(255, 255*(kelvin-2600)/(6000-2600), 0);
+		} else if (kelvin <= 10000) {
+			return Gosu::Color(255, 255, 255*(kelvin-6000)/(10000-6000));
+		} else if (kelvin <= 33000) {
+			int val = 255-(255-100)*(kelvin-10000)/(33000-10000);
 			return Gosu::Color(val, val, 255);
 		} else {
 			return Gosu::Color(100, 100, 255);
