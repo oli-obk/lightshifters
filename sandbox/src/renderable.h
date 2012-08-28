@@ -52,7 +52,7 @@ struct Matrix;
 
 typedef uint32_t RenderableID;
 static const RenderableID InvalidRenderableID = -1;
-
+typedef uint32_t PlayerID;
 struct Packet;
 
 class Renderable
@@ -71,12 +71,18 @@ private:
 	Gosu::Color m_Color;
 	std::string m_Type;
 	std::wstring m_ImageName;
+	PlayerID m_PlayerID;
 	void forceID(RenderableID id);
 	void deserialize(const Packet& p);
+	double m_MinScale;
 protected:
 	Renderable();
 	Renderable(bool);
 public:
+	void setMinScale(double);
+	double getMinScale() const;
+	PlayerID getOwner() const;
+	void setOwner(PlayerID id);
 	Renderable(Renderable &&);
 	static Renderable temporary();
 	void serialize(Packet& p) const;

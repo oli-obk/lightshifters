@@ -48,6 +48,7 @@ Gosu::Image& Renderable::getImage(std::wstring name)
 Renderable::Renderable()
 {
 	m_Scale = 1.0;
+	m_MinScale = 0.0;
 	setColor(Gosu::Colors::white);
 	m_myID = s_curID;
 	s_curID++;
@@ -75,6 +76,9 @@ void Renderable::draw(const Matrix& mat, double wdt, double hgt)
 	double x = screenX(sc, wdt);
 	double y = screenY(sc, hgt);
 	size *= m_Scale;
+	if (size < m_MinScale) {
+		size = m_MinScale;
+	}
 	Gosu::Image& im = getImage(getImageName());
 	im.drawRot(x, y, -sc.distance, 0, 0.5, 0.5, size, size, m_Color);
 	if (x + size*im.width()/2 > wdt) {
@@ -132,11 +136,14 @@ double Renderable::getScale() const
 
 void Renderable::serialize(Packet& p) const
 {
+	assert(getID() != InvalidRenderableID);
 	p.write(getID());
 	p.write(getType());
 	p.write(getColor().argb());
 	p.write(getPosition());
 	p.write(getScale());
+	p.write(getOwner());
+	p.write(getMinScale());
 }
 
 void Renderable::deserialize(const Packet& p)
@@ -146,6 +153,8 @@ void Renderable::deserialize(const Packet& p)
 	setColor(p.read<uint32_t>());
 	setPosition(p.read<Vector>());
 	setScale(p.read<double>());
+	setOwner(p.read<PlayerID>());
+	setMinScale(p.read<double>());
 }
 
 void Renderable::setType(std::string type)
@@ -185,6 +194,8 @@ Renderable::Renderable(Renderable && other)
 	m_Scale = other.m_Scale;
 	m_Type = other.m_Type;
 	m_myID = other.m_myID;
+	m_PlayerID = other.m_PlayerID;
+	m_MinScale = other.m_MinScale;
 	other.m_myID = InvalidRenderableID;
 }
 
@@ -192,4 +203,24 @@ Renderable::Renderable(bool)
 {
 	m_Scale = 1.0;
 	m_Color = Gosu::Colors::white;
+}
+
+PlayerID Renderable::getOwner() const
+{
+	return m_PlayerID;
+}
+
+void Renderable::setOwner(PlayerID id)
+{
+	m_PlayerID = id;
+}
+
+void Renderable::setMinScale(double scale)
+{
+	m_MinScale = scale;
+}
+
+double Renderable::getMinScale() const
+{
+	return m_MinScale;
 }

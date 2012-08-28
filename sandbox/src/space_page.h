@@ -39,14 +39,14 @@ inline std::wostream& operator<<(std::wostream& o, const Vector& pos)
 #include "renderable.h"
 struct Packet;
 
-typedef uint32_t PlayerID;
-
 class SpacePage : public Page
 {
-
+public:
+	typedef std::map<RenderableID, std::unique_ptr<Renderable> > EntityMap;
 private:
-	std::map<RenderableID, std::unique_ptr<Renderable> > m_mEntities;
-	Vector m_posPlayer;
+	EntityMap m_mEntities;
+	EntityMap::iterator m_itPlayerEntity;
+	bool m_bItPlayerEntitiesValid;
 	SpacePage(const SpacePage& rhs);
 	SpacePage& operator=(const SpacePage& rhs);
 	Gosu::Font m_Font;
@@ -64,7 +64,6 @@ private:
 	void onDisconnection(SocketSet::iterator);
 	void onReceive(PlayerID, const void*, std::size_t);
 	PlayerID m_pidNext, m_pidMine;
-	std::map<PlayerID, RenderableID> m_mPlayerIDToRenderable;
 	size_t m_uTrollsCaught;
 public:
 	void sendPacketToAll(const Packet& p);

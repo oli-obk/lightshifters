@@ -23,14 +23,31 @@ enum class PacketType : uint8_t
 {
     addstars,
     deletestars,
-	setposition,
-	setplayerposition
+	setposition
 };
+
+template<class T>
+T& createEntity(SpacePage::EntityMap& list)
+{
+	std::unique_ptr<T> ptr(new T());
+	T& r = *ptr;
+	list.insert(std::make_pair(r.getID(), std::move(ptr)));
+	return r;
+}
+
+Renderable& createEntity(SpacePage::EntityMap& list, const Packet& p)
+{
+	std::unique_ptr<Renderable> ptr(new Renderable(p));
+	Renderable& r = *ptr;
+	list.insert(std::make_pair(r.getID(), std::move(ptr)));
+	return r;
+}
 
 SpacePage::SpacePage()
 	:m_Font(PageManager::Instance()->graphics(), Gosu::defaultFontName(), 20)
 	,m_rotPlayer(Quaternion::identity())
 {
+	m_bItPlayerEntitiesValid = false;
 	m_uTrollsCaught = 0;
 	try {
 		m_pListenerSocket.reset(new Gosu::ListenerSocket(50042));
@@ -38,10 +55,10 @@ SpacePage::SpacePage()
 		m_pidMine = 0;
 		m_pListenerSocket->onConnection = std::bind(&SpacePage::onConnection, this, std::placeholders::_1);
 		generateSpace();
-		std::unique_ptr<Renderable> ptr(new Player());
-		Renderable& r = *ptr;
-		m_mEntities.insert(std::make_pair(r.getID(), std::move(ptr)));
-		m_mPlayerIDToRenderable[m_pidMine] = r.getID();
+		Renderable& r = createEntity<Player>(m_mEntities);
+		r.setOwner(m_pidMine);
+		m_itPlayerEntity = m_mEntities.find(r.getID());
+		m_bItPlayerEntitiesValid = true;
 	} catch (const std::runtime_error& e) {
 		if (e.what() != std::string("Address already in use")) {
 			throw e;
@@ -74,17 +91,21 @@ SpacePage::~SpacePage()
 
 void SpacePage::draw()
 {
+	Vector PlayerPosition;
+	if (m_itPlayerEntity != m_mEntities.end()) {
+		PlayerPosition = m_itPlayerEntity->second->getPosition();
+	}
 	Gosu::Graphics& g = PageManager::Instance()->graphics();
 	double wdt = g.width();
 	double hgt = g.height();
-	Matrix mat = m_rotPlayer.inverted().toMatrix().translated(-m_posPlayer);
+	Matrix mat = m_rotPlayer.inverted().toMatrix().translated(-PlayerPosition);
 	Vector closestPos;
-	double closestDist;
+	double closestDist = 0.0;
 	bool hasClosest = false;
 	for (auto& it: m_mEntities) {
 		const std::unique_ptr<Renderable>& obj = it.second;
 		if (obj->getType() == "troll") {
-			double dist = (m_posPlayer - obj->getPosition()).magnitudeSquared();
+			double dist = (PlayerPosition - obj->getPosition()).magnitudeSquared();
 			if (closestDist > dist || !hasClosest) {
 				closestDist = dist;
 				hasClosest = true;
@@ -96,7 +117,8 @@ void SpacePage::draw()
 	if (hasClosest) {
 		Renderable rend = Renderable::temporary();
 		rend.setImageName(L"sphere.png");
-		rend.setScale(0.02);
+		rend.setScale(0.01);
+		rend.setMinScale(0.1);
 		Gosu::Color col = Gosu::Colors::green;
 		rend.setColor(col);
 		rend.setPosition(closestPos);
@@ -127,6 +149,24 @@ void SpacePage::rotateDegrees(Vector axis, double angle)
 
 void SpacePage::update()
 {
+	for (auto& it: m_sCommSockets) {
+		(*it).update();
+	}
+	if (m_pListenerSocket) {
+		m_pListenerSocket->update();
+	}
+	
+	if (!m_bItPlayerEntitiesValid) {
+		for(auto it = m_mEntities.begin(); it != m_mEntities.end(); it++) {
+			if (it->second->getOwner() == m_pidMine) {
+				m_itPlayerEntity = it;
+				m_bItPlayerEntitiesValid = true;
+				break;
+			}
+		}
+		if (!m_bItPlayerEntitiesValid) return;
+	}
+	Renderable& playerEntity = *(m_itPlayerEntity->second);
 	Gosu::Input& i = PageManager::Instance()->input();
 
 	if (i.down(m_kbSpinLeft)) {
@@ -173,30 +213,25 @@ void SpacePage::update()
 	}
 	if (dir.x != 0 || dir.y != 0 || dir.z != 0) {
 		dir.normalize();
-		m_posPlayer += m_rotPlayer * dir * speed;
-		if (m_pListenerSocket) {
-			auto id = m_mPlayerIDToRenderable[m_pidMine];
-			Packet p;
-			p.write(PacketType::setposition);
-			p.write(id);
-			p.write(m_posPlayer);
-			sendPacketToAll(p);
-		} else {
-			Packet p;
-			p.write(PacketType::setplayerposition);
-			p.write(m_posPlayer);
-			sendPacketToAll(p);
-		}
+		playerEntity.setPosition(playerEntity.getPosition() + m_rotPlayer * dir * speed);
+		std::cout << "changed player pos" << std::endl;
+		Packet p;
+		p.write(PacketType::setposition);
+		p.write(playerEntity.getID());
+		p.write(playerEntity.getPosition());
+		sendPacketToAll(p);
 	}
+	std::cout << "looking for trolls" << std::endl;
 	
 	//double beg = Gosu::milliseconds();
 	for (auto it = m_mEntities.begin(); it != m_mEntities.end();) {
+		assert(it->second);
 		Renderable& r = *(it->second);
 		auto oldit = it++;
 		// only hunt trolls
 		if (r.getType() != "troll") continue;
 		// and we need to catch them
-		if ( (r.getPosition() - m_posPlayer).magnitudeSquared() > 10.0*10.0) continue;
+		if ( (r.getPosition() - playerEntity.getPosition()).magnitudeSquared() > 10.0*10.0) continue;
 		// tell everyone i got it
 		RenderableID id = r.getID();
 		Packet p;
@@ -208,12 +243,6 @@ void SpacePage::update()
 	}
 	//double ms = Gosu::milliseconds()-beg;
 	//std::cout << ms << std::endl;
-	for (auto& it: m_sCommSockets) {
-		(*it).update();
-	}
-	if (m_pListenerSocket) {
-		m_pListenerSocket->update();
-	}
 }
 
 
@@ -230,11 +259,9 @@ void SpacePage::generateSpace()
 	for (int i = 0; i < 100; i++) {
 		Vector pos(posgen(engine), posgen(engine), posgen(engine));
 		uint32_t temp = tempgen(engine);
-		std::unique_ptr<Troll> ptr(new Troll());
-		ptr->setPosition(pos);
-		ptr->setColor(Temperature(temp).color());
-		auto id = ptr->getID();
-		m_mEntities.insert(std::make_pair(id, std::move(ptr)));
+		Troll& troll = createEntity<Troll>(m_mEntities);
+		troll.setPosition(pos);
+		troll.setColor(Temperature(temp).color());
 	}
 }
 
@@ -245,21 +272,12 @@ void SpacePage::onConnection(Gosu::Socket& sock)
 	cs.onDisconnection = std::bind(&SpacePage::onDisconnection, this, pair.first);
 	cs.onReceive = std::bind(&SpacePage::onReceive, this, m_pidNext, std::placeholders::_1, std::placeholders::_2);
 	std::cout << "new connection from: " << Gosu::addressToString(cs.address()) << ":" << cs.port() << std::endl;
-	std::unique_ptr<Renderable> ptr(new Player());
-	const Renderable& r = *ptr;
-	m_mEntities.insert(std::make_pair(r.getID(), std::move(ptr)));
-	{
-		Packet p;
-		p.write(PacketType::addstars);
-		r.serialize(p);
-		sendPacketToAll(p);
-	}
-	m_mPlayerIDToRenderable[m_pidNext] = r.getID();
+	Renderable& r = createEntity<Player>(m_mEntities);
+	r.setOwner(m_pidNext);
 	Packet p;
 	p.write(PacketType::addstars);
 	for (auto& ptr: m_mEntities) {
 		Renderable& r2 = *ptr.second;
-		if (r2.getID() == r.getID()) continue;
 		r2.serialize(p);
 	}
 	p.writeTo(cs);
@@ -282,14 +300,16 @@ void SpacePage::onReceive(PlayerID player_id, const void* data, std::size_t size
 	PacketType pt = p.read<PacketType>();
 	switch (pt) {
 	case PacketType::addstars:
+		// as the server i do not accept these packets
+		if (m_pListenerSocket) break;
 		while (p.bytesLeftToRead()) {
-			std::unique_ptr<Renderable> ptr(new Renderable(p));
-			std::cout << "new item of type: " << ptr->getType() << " at " << ptr->getPosition() << " with scale " << ptr->getScale() << std::endl;
-			auto id = ptr->getID();
-			m_mEntities.insert(std::make_pair(id, std::move(ptr)));
+			const Renderable& r = createEntity(m_mEntities, p);
+			std::cout << "new item of type: " << r.getType() << " at " << r.getPosition() << " with scale " << r.getScale() << std::endl;
 		}
 		break;
 	case PacketType::deletestars:
+		// as the server i do not accept these packets
+		if (m_pListenerSocket) break;
 		while (p.bytesLeftToRead()) {
 			RenderableID id = p.read<RenderableID>();
 			auto it = m_mEntities.find(id);
@@ -300,34 +320,18 @@ void SpacePage::onReceive(PlayerID player_id, const void* data, std::size_t size
 			m_mEntities.erase(it);
 		}
 		break;
-	case PacketType::setplayerposition:
-		while (p.bytesLeftToRead()) {
-			RenderableID id = m_mPlayerIDToRenderable[player_id];
-			Vector pos = p.read<Vector>();
-			std::cout << "setplayerposition: " << pos << std::endl;
-			auto it = m_mEntities.find(id);
-			if (it == m_mEntities.end()) {
-				std::cout << "tried to set position of Player " << player_id << ", but no renderable was found" << std::endl;
-				continue;
-			}
-			(it->second)->setPosition(pos);
-			Packet p;
-			p.write(PacketType::setposition);
-			p.write(id);
-			p.write(pos);
-			sendPacketToAll(p);
-		}
-	break;
 	case PacketType::setposition:
 		while (p.bytesLeftToRead()) {
 			RenderableID id = p.read<RenderableID>();
 			Vector pos = p.read<Vector>();
-			std::cout << "setposition: " << pos << std::endl;
 			auto it = m_mEntities.find(id);
 			if (it == m_mEntities.end()) {
 				std::cout << "tried to set position of Renderable " << id << ", but it does not seem to exist anymore" << std::endl;
 				continue;
 			}
+			Renderable& r = *(it->second);
+			// as the server i only accept these packets if the owner tries to set the position
+			if (m_pListenerSocket && (r.getOwner() != player_id)) continue;
 			(it->second)->setPosition(pos);
 		}
 	break;
