@@ -24,7 +24,8 @@ private:
 	~PageManager();
 
 public:
-	template<typename T> std::unique_ptr<Page> load(bool return_old_page = false);
+	template<typename T, typename... Args> void load(Args... args);
+    template<typename T, typename... Args> std::unique_ptr<Page> swap(Args... args);
 	virtual void buttonDown(Gosu::Button);
 	virtual void buttonUp(Gosu::Button);
 	virtual void draw();
@@ -38,13 +39,17 @@ public:
 	virtual void update();
 };
 
-
-template<typename T> std::unique_ptr<Page> PageManager::load(bool return_old_page)
+template<typename T, typename... Args> std::unique_ptr<Page> PageManager::swap(Args... args)
 {
 	m_pLast = std::move(m_pPage);
-	m_pPage.reset(new T());
-	if (return_old_page) return std::move(m_pLast);
-	return std::move(std::unique_ptr<T>());
+	m_pPage.reset(new T(args...));
+	return std::move(m_pLast);
+}
+
+template<typename T, typename... Args> void PageManager::load(Args... args)
+{
+	m_pLast = std::move(m_pPage);
+	m_pPage.reset(new T(args...));
 }
 
 #endif // PAGEMANAGER_HPP

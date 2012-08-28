@@ -68,7 +68,7 @@ double screenY(const SphericalCoordinate& sc, double hgt)
 	return Gosu::wrap(sc.inclination/M_PI/2*hgt*2, 0.0, hgt);
 }
 
-void Renderable::draw(const Matrix& mat, double wdt, double hgt)
+void Renderable::draw(const Matrix& mat, double wdt, double hgt) const
 {
 	SphericalCoordinate sc = (mat * m_Position).toSphericalCoordinate();
 	if(sc.distance < 10.0) return; // "clipping"
@@ -160,8 +160,9 @@ void Renderable::deserialize(const Packet& p)
 void Renderable::setType(std::string type)
 {
 	m_Type = type;
-	if (m_Type == "player") {
+	if (type == "player") {
 		setImageName(L"sphere.png");
+        return;
 	}
 	setImageName(L"trollface.png");
 }

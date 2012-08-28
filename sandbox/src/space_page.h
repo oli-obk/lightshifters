@@ -1,6 +1,7 @@
 #ifndef SPACEPAGE_H
 #define SPACEPAGE_H
 
+#include "RenderableID.h"
 #include <Gosu/Sockets.hpp>
 #include <Gosu/Image.hpp>
 #include "page.h" // Base class: Page
@@ -10,11 +11,7 @@
 #include <cassert>
 #include "Vector.h"
 #include "Quaternion.h"
-
-struct dxyz {
-	dxyz():x(0),y(0),z(0) {}
-	double x, y, z;
-};
+#include "Matrix.h"
 
 static const double s_to_min = 1.0/60.0;
 static const double min_to_h = 1.0/60.0;
@@ -33,20 +30,33 @@ inline std::wostream& operator<<(std::wostream& o, const Vector& pos)
 	return o << "(" << pos.x << ", " << pos.y << ", " << pos.z << ")";
 }
 
+enum ZOrder
+{
+    zHUD = 10,
+    zUI = 20
+};
+
 
 #include <set>
 #include <memory>
-#include "renderable.h"
+struct Renderable;
 struct Packet;
+#include "PlayerID.h"
+
+struct ClosestHud
+{
+    Vector m_vecPos;
+	double m_dDistSquared;
+	bool m_bValid;
+    RenderableID m_ID;
+    void check(const Renderable& r, Vector pos);
+    void reset();
+    void draw(const Matrix& mat, double wdt, double hgt);
+};
 
 class SpacePage : public Page
 {
-public:
-	typedef std::map<RenderableID, std::unique_ptr<Renderable> > EntityMap;
-private:
-	EntityMap m_mEntities;
-	EntityMap::iterator m_itPlayerEntity;
-	bool m_bItPlayerEntitiesValid;
+protected:
 	SpacePage(const SpacePage& rhs);
 	SpacePage& operator=(const SpacePage& rhs);
 	Gosu::Font m_Font;
@@ -56,15 +66,16 @@ private:
 	Gosu::Button m_kbForward, m_kbBackward, m_kbStrafeRight, m_kbStrafeLeft;
 	Gosu::Button m_kbStrafeUp, m_kbStrafeDown, m_kbSpinLeft, m_kbSpinRight;
 	bool m_bInvertMouse;
-	std::unique_ptr<Gosu::ListenerSocket> m_pListenerSocket;
-	typedef std::set<std::unique_ptr<Gosu::CommSocket>> SocketSet;
-	SocketSet m_sCommSockets;
-	void generateSpace();
-	void onConnection(Gosu::Socket& sock);
-	void onDisconnection(SocketSet::iterator);
-	void onReceive(PlayerID, const void*, std::size_t);
-	PlayerID m_pidNext, m_pidMine;
-	size_t m_uTrollsCaught;
+	PlayerID m_pidMine;
+    Matrix m_matGlobalToLocal;
+    ClosestHud m_Closest;
+    void refreshMatrix();
+    void PlayerPositionChanged();
+    Renderable* m_pPlayerRenderable;
+protected:
+    virtual void PositionChanged(const Renderable&) = 0;
+    virtual Renderable& getEntity(RenderableID id) = 0;
+    void render(const Renderable&);
 public:
 	void sendPacketToAll(const Packet& p);
 	SpacePage();

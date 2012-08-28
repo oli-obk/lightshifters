@@ -50,9 +50,8 @@ struct Temperature {
 struct SphericalCoordinate;
 struct Matrix;
 
-typedef uint32_t RenderableID;
-static const RenderableID InvalidRenderableID = -1;
-typedef uint32_t PlayerID;
+#include "PlayerID.h"
+#include "RenderableID.h"
 struct Packet;
 
 class Renderable
@@ -77,7 +76,7 @@ private:
 	double m_MinScale;
 protected:
 	Renderable();
-	Renderable(bool);
+	explicit Renderable(bool);
 public:
 	void setMinScale(double);
 	double getMinScale() const;
@@ -96,7 +95,7 @@ public:
 	Vector getPosition() const;
 	Gosu::Color getColor() const;
 	void setPosition(Vector v);
-	virtual void draw(const Matrix& mat, double wdt, double hgt);
+	virtual void draw(const Matrix& mat, double wdt, double hgt) const;
 	Renderable(const Packet& p);
 	virtual ~Renderable();
 	void setImageName(std::wstring name);

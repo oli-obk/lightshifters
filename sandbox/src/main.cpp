@@ -1,8 +1,9 @@
+#include "client_page.h"
+#include "server_page.h"
 #include <iostream>
 #include <Gosu/Gosu.hpp>
 #include "page_manager.h"
 #include "config.h"
-#include "space_page.h"
 
 int main(int argc, char* argv[])
 {
@@ -12,7 +13,12 @@ int main(int argc, char* argv[])
 	
 	PageManager* man = PageManager::Instance();
 	man->setCaption(L"Lightshifters SiO2 []");
-	man->load<SpacePage>();
+    try {
+        man->load<ServerPage>(config->get<uint16_t>("port", 50042));
+    } catch (...) {
+        std::cout << "loading client" << std::endl;
+        man->load<ClientPage>(config->get<std::string>("connectTo", "localhost"), config->get<uint16_t>("port", 50042));
+    }
 	man->show();
 	man->Release();
 	config->Release();
