@@ -1,3 +1,4 @@
+#include <Gosu/Inspection.hpp>
 #include "PacketType.h"
 #include <Gosu/Timing.hpp>
 #include "config.h"
@@ -70,6 +71,9 @@ void SpacePage::draw()
 	g.drawLine(xn, yp, Gosu::Colors::white, xn, yn, Gosu::Colors::white, 20);
 	g.drawLine(wdt/2-20, hgt/2, Gosu::Colors::green, wdt/2+20, hgt/2, Gosu::Colors::green, 20);
 	g.drawLine(wdt/2, hgt/2-20, Gosu::Colors::green, wdt/2, hgt/2+20, Gosu::Colors::green, 20);
+    std::wstringstream ss;
+    ss << Gosu::fps();
+    m_Font.drawRel(ss.str(), wdt-20, 20, 20, 1.0, 0.0);
 }
 
 void ClosestHud::check(const Renderable& r, Vector pos)
@@ -176,4 +180,11 @@ void SpacePage::refreshMatrix()
 {
     if (!m_pPlayerRenderable) return;
 	m_matGlobalToLocal = m_rotPlayer.inverted().toMatrix().translated(-m_pPlayerRenderable->getPosition());
+}
+
+void SpacePage::buttonUp(Gosu::Button btn)
+{
+    if (btn == Gosu::msLeft) {
+        this->firePlasma(m_rotPlayer*Vector::FORWARD);
+    }
 }

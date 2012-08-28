@@ -1,9 +1,9 @@
 #ifndef TROLL_H
 #define TROLL_H
 
-#include "renderable.h" // Base class: Renderable
+#include "server_entity.h"
 
-class Troll : public Renderable {
+class Troll : public ServerEntity {
 
 public:
 	Troll();

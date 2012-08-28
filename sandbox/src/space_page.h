@@ -82,6 +82,8 @@ public:
 	~SpacePage();
 	virtual void update();
 	bool needsCursor() const;
+    void buttonUp(Gosu::Button btn);
+    virtual void firePlasma(Vector direction) = 0;
 
 	virtual void draw();
 

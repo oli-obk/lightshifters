@@ -58,12 +58,12 @@ Renderable::~Renderable()
 {
 }
 
-double screenX(const SphericalCoordinate& sc, double wdt)
+double Renderable::screenX(const SphericalCoordinate& sc, double wdt)
 {
 	return Gosu::wrap(sc.azimuth/M_PI/2*wdt - wdt*0.75, 0.0, wdt);
 }
 
-double screenY(const SphericalCoordinate& sc, double hgt)
+double Renderable::screenY(const SphericalCoordinate& sc, double hgt)
 {
 	return Gosu::wrap(sc.inclination/M_PI/2*hgt*2, 0.0, hgt);
 }
@@ -164,6 +164,10 @@ void Renderable::setType(std::string type)
 		setImageName(L"sphere.png");
         return;
 	}
+    if (type == "bullet") {
+        setImageName(L"sphere.png");
+        return;
+    }
 	setImageName(L"trollface.png");
 }
 

@@ -1,12 +1,14 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "renderable.h" // Base class: Renderable
+#include "PlayerID.h"
+#include "server_entity.h"
 
-class Player : public Renderable {
+
+class Player : public ServerEntity {
 
 public:
-	Player();
+	Player(PlayerID);
 	~Player();
 };
 

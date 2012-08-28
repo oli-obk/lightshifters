@@ -1,10 +1,10 @@
 #include "player.h"
 
-Player::Player()
+Player::Player(PlayerID id)
 {
 	setScale(0.01);
 	setType("player");
-	setImageName(L"sphere.png");
+    setOwner(id);
 }
 
 Player::~Player()

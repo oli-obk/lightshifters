@@ -12,12 +12,14 @@ public:
     typedef std::map<RenderableID, Renderable> EntityMap;
     Gosu::CommSocket m_Connection;
     EntityMap m_mEntities;
-	std::map<PlayerID, size_t> m_mTrollsCaught;
+    std::map<PlayerID, size_t> m_mTrollsCaught;
 private:
     ClientPage(const ClientPage& rhs);
     ClientPage& operator=(const ClientPage& rhs);
     void onDisconnection();
     void onReceive(const void*, std::size_t);
+
+    void firePlasma(Vector direction);
 
 public:
     ClientPage(std::string addr, uint16_t port);

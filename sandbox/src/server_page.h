@@ -6,24 +6,28 @@
 #include "RenderableID.h"
 #include <memory>
 
+struct ServerEntity;
 struct Renderable;
 
 #include <map>
 
-struct PlayerState
-{
+struct PlayerState {
     RenderableID PlayerEntity;
     size_t TrollsCaught;
 };
 
 class ServerPage : public SpacePage
 {
-
+private:
+    static ServerPage* s_pInstance;
+public:
+    static ServerPage& getInstance();
+private:
     Gosu::ListenerSocket m_ListenerSocket;
     void generateSpace();
     typedef std::map<PlayerID, std::unique_ptr<Gosu::CommSocket> > SocketSet;
     SocketSet m_sClients;
-    typedef std::map<RenderableID, std::unique_ptr<Renderable> > EntityMap;
+    typedef std::map<RenderableID, std::unique_ptr<ServerEntity> > EntityMap;
     EntityMap m_mEntities;
     PlayerID m_pidNext;
     std::map<PlayerID, PlayerState> m_mPlayers;
@@ -35,14 +39,19 @@ private:
     void onConnection(Gosu::Socket& sock);
     void update();
     void draw();
-    void sendPacketToAll(const Packet& p);
+
+    template<class T, typename... Args>
+    T& createEntity(Args... args);
 public:
+    void sendPacketToAll(const Packet& p);
     ServerPage(uint16_t port);
     ~ServerPage();
 
     void PositionChanged(const Renderable&);
     Renderable& getEntity(RenderableID id);
     void eraseEntity(RenderableID id);
+
+    void firePlasma(Vector direction);
 
 };
 

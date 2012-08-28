@@ -1,3 +1,4 @@
+#include "bullet.h"
 #include "PacketType.h"
 #include "server_page.h"
 #include "player.h"
@@ -6,25 +7,38 @@
 #include "RenderableID.h"
 #include <sstream>
 
-template<class T>
-T& createEntity(ServerPage::EntityMap& list)
+
+template<class T, typename... Args>
+T& ServerPage::createEntity(Args... args)
 {
-    std::unique_ptr<T> ptr(new T());
+    std::unique_ptr<T> ptr(new T(args...));
     T& r = *ptr;
-    list.insert(std::make_pair(r.getID(), std::move(ptr)));
+    m_mEntities.insert(std::make_pair(r.getID(), std::move(ptr)));
+    Packet p;
+    p.write(PacketType::create_entities);
+    r.serialize(p);
+    sendPacketToAll(p);
     return r;
+}
+
+ServerPage* ServerPage::s_pInstance = nullptr;
+ServerPage& ServerPage::getInstance()
+{
+    assert(s_pInstance);
+    return *s_pInstance;
 }
 
 ServerPage::ServerPage(uint16_t port)
     :m_ListenerSocket(port)
 {
+    assert(!s_pInstance);
+    s_pInstance = this;
     m_pidNext = 1;
     m_pidMine = 0;
     m_ListenerSocket.onConnection = std::bind(&ServerPage::onConnection, this, std::placeholders::_1);
     generateSpace();
-    Renderable& r = createEntity<Player>(m_mEntities);
+    Renderable& r = createEntity<Player>(m_pidMine);
     m_mPlayers[m_pidMine].PlayerEntity = r.getID();
-    r.setOwner(m_pidMine);
     m_pPlayerRenderable = &r;
 }
 
@@ -35,9 +49,8 @@ void ServerPage::onConnection(Gosu::Socket& sock)
     cs.onDisconnection = std::bind(&ServerPage::onDisconnection, this, pair.first);
     cs.onReceive = std::bind(&ServerPage::onReceive, this, m_pidNext, std::placeholders::_1, std::placeholders::_2);
     std::cout << "new connection from: " << Gosu::addressToString(cs.address()) << ":" << cs.port() << std::endl;
-    Renderable& r = createEntity<Player>(m_mEntities);
+    Renderable& r = createEntity<Player>(m_pidNext);
     m_mPlayers[m_pidNext].PlayerEntity = r.getID();
-    r.setOwner(m_pidNext);
     Packet p2;
     p2.write(PacketType::set_player_id);
     p2.write(m_pidNext);
@@ -68,7 +81,7 @@ void ServerPage::generateSpace()
     for (int i = 0; i < 100; i++) {
         Vector pos(posgen(engine), posgen(engine), posgen(engine));
         uint32_t temp = tempgen(engine);
-        Troll& troll = createEntity<Troll>(m_mEntities);
+        Troll& troll = createEntity<Troll>();
         troll.setPosition(pos);
         troll.setColor(Temperature(temp).color());
     }
@@ -76,6 +89,8 @@ void ServerPage::generateSpace()
 
 ServerPage::~ServerPage()
 {
+    assert(s_pInstance);
+    s_pInstance = nullptr;
 }
 
 void ServerPage::update()
@@ -83,6 +98,9 @@ void ServerPage::update()
     SpacePage::update();
     m_ListenerSocket.update();
     for(auto& it : m_sClients) {
+        it.second->update();
+    }
+    for(auto& it : m_mEntities) {
         it.second->update();
     }
     if (!m_pPlayerRenderable) return;
@@ -101,7 +119,7 @@ void ServerPage::draw()
     }
     {
         double pos = 10;
-            for (auto& it: m_mPlayers) {
+        for (auto& it: m_mPlayers) {
             std::wstringstream wss;
             if (it.first == m_pidMine) {
                 wss << L"You";
@@ -115,7 +133,7 @@ void ServerPage::draw()
             m_Font.draw(wss.str(), 10, pos, 10);
             pos += 15;
         }
-	}
+    }
 }
 
 
@@ -177,6 +195,12 @@ void ServerPage::onReceive(PlayerID player_id, const void* data, std::size_t siz
             sendPacketToAll(p2);
         }
         break;
+    case PacketType::fire_plasma:
+        {
+            Vector dir = p.read<Vector>();
+            dir.normalize();
+            createEntity<Bullet>(dir).setPosition(m_mEntities[m_mPlayers[player_id].PlayerEntity]->getPosition());
+        }
     default:
         std::cout << "invalid packet type received: " << static_cast<uint32_t>(pt) << std::endl;
         break;
@@ -188,7 +212,7 @@ void ServerPage::onReceive(PlayerID player_id, const void* data, std::size_t siz
 
 void ServerPage::sendPacketToAll(const Packet& p)
 {
-    for (auto& ptr : m_sClients) {
+for (auto& ptr : m_sClients) {
         Gosu::CommSocket& cs = *(ptr.second);
         p.writeTo(cs);
         cs.sendPendingData();
@@ -218,4 +242,9 @@ void ServerPage::eraseEntity(RenderableID id)
     p.write(PacketType::delete_entities);
     p.write(id);
     sendPacketToAll(p);
+}
+
+void ServerPage::firePlasma(Vector direction)
+{
+    createEntity<Bullet>(direction).setPosition(m_pPlayerRenderable->getPosition());
 }

@@ -99,6 +99,9 @@ public:
 	Renderable(const Packet& p);
 	virtual ~Renderable();
 	void setImageName(std::wstring name);
+    
+    static double screenX(const SphericalCoordinate& sc, double wdt);
+    static double screenY(const SphericalCoordinate& sc, double hgt);
 };
 
 #endif // RENDERABLE_H

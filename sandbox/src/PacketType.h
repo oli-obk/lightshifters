@@ -10,6 +10,7 @@ enum class PacketType : uint8_t
     set_player_id,
     catch_troll,
     scoreboard,
+    fire_plasma
 };
 
 #endif // PACKETTYPE_H

@@ -70,15 +70,14 @@ void ClientPage::onReceive(const void* data, std::size_t size)
             r.setPosition(pos);
         }
         break;
-    case PacketType::set_player_id:
-        {
-            PlayerID id = p.read<PlayerID>();
-            if (m_pidMine != InvalidPlayerID) {
-                std::cout << "warning, changing player id when already had a valid id" << std::endl;
-            }
-            m_pidMine = id;
+    case PacketType::set_player_id: {
+        PlayerID id = p.read<PlayerID>();
+        if (m_pidMine != InvalidPlayerID) {
+            std::cout << "warning, changing player id when already had a valid id" << std::endl;
         }
-        break;
+        m_pidMine = id;
+    }
+    break;
     case PacketType::scoreboard:
         while (p.bytesLeftToRead()) {
             PlayerID id = p.read<PlayerID>();
@@ -124,12 +123,12 @@ void ClientPage::update()
 void ClientPage::draw()
 {
     SpacePage::draw();
-    for (auto& it: m_mEntities) {
+for (auto& it: m_mEntities) {
         render(it.second);
     }
     {
         double pos = 10;
-            for (auto& it: m_mTrollsCaught) {
+for (auto& it: m_mTrollsCaught) {
             std::wstringstream wss;
             if (it.first == m_pidMine) {
                 wss << L"You";
@@ -143,5 +142,13 @@ void ClientPage::draw()
             m_Font.draw(wss.str(), 10, pos, 10);
             pos += 15;
         }
-	}
+    }
+}
+
+void ClientPage::firePlasma(Vector direction)
+{
+    Packet p;
+    p.write(PacketType::fire_plasma);
+    p.write(direction);
+    p.writeTo(m_Connection);
 }
