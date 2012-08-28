@@ -103,7 +103,15 @@ void ServerPage::draw()
         double pos = 10;
             for (auto& it: m_mPlayers) {
             std::wstringstream wss;
-            wss << L"Trolls caught: " << it.second.TrollsCaught;
+            if (it.first == m_pidMine) {
+                wss << L"You";
+            } else {
+                wss << L"Player " << it.first;
+            }
+            wss << L" caught " << it.second.TrollsCaught << L" Troll";
+            if (it.second.TrollsCaught != 1) {
+                wss << L"s";
+            }
             m_Font.draw(wss.str(), 10, pos, 10);
             pos += 15;
         }
