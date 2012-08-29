@@ -10,10 +10,10 @@ Packet::Packet(const void* data, size_t size)
 	m_bReadInProgress = false;
 }
 
-Packet::Packet()
+Packet::Packet(bool tcp)
 :m_voidData(nullptr)
 ,m_voidSize(0)
-,m_bSendByUdp(false)
+,m_bSendByUdp(!tcp)
 {
 	m_bReadInProgress = false;
 }
@@ -50,14 +50,6 @@ size_t Packet::bytesLeftToRead() const
 {
 	assert (m_bReadInProgress);
 	return (buflen() - m_uCurReadPos);
-}
-
-Packet::Packet(SendByUdp)
-:m_voidData(nullptr)
-,m_voidSize(0)
-,m_bReadInProgress(false)
-{
-    bool m_bSendByUdp = true;
 }
 
 bool Packet::sendByUdp() const

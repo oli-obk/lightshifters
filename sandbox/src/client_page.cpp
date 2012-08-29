@@ -5,6 +5,8 @@
 #include "client_page.h"
 #include <sstream>
 
+using namespace std::placeholders;
+
 Renderable& createEntity(ClientPage::EntityMap& list, const Packet& p)
 {
     Renderable r(p);
@@ -13,14 +15,20 @@ Renderable& createEntity(ClientPage::EntityMap& list, const Packet& p)
     return it.first->second;
 }
 
-ClientPage::ClientPage(std::string addr, uint16_t port, uint16_t host_port)
+ClientPage::ClientPage(std::string addr, Gosu::SocketPort port, Gosu::SocketPort host_port)
     :m_Connection(Gosu::cmManaged, Gosu::stringToAddress(addr), port)
     ,m_MessageSocket(host_port)
+    ,m_Port(port)
 {
     std::cout << "listening on udp " << host_port << std::endl;
     std::cout << "connected to tcp " << m_Connection.address() << ":" << m_Connection.port() << std::endl;
     m_Connection.onDisconnection = std::bind(&ClientPage::onDisconnection, this);
-    m_Connection.onReceive = std::bind(&ClientPage::onReceive, this, std::placeholders::_1, std::placeholders::_2);
+    m_Connection.onReceive = std::bind(&ClientPage::onReceive, this, _1, _2);
+    m_MessageSocket.onReceive = std::bind(&ClientPage::onReceiveUdp, this, _1, _2, _3, _4);
+    Packet p;
+    p.write(PacketType::udp_port_update);
+    p.write(host_port);
+    sendPacket(p);
 }
 
 ClientPage::~ClientPage()
@@ -58,19 +66,6 @@ void ClientPage::onReceive(const void* data, std::size_t size)
             m_mEntities.erase(it);
         }
         break;
-    case PacketType::set_entity_position:
-        while (p.bytesLeftToRead()) {
-            RenderableID id = p.read<RenderableID>();
-            Vector pos = p.read<Vector>();
-            auto it = m_mEntities.find(id);
-            if (it == m_mEntities.end()) {
-                std::cout << "tried to set position of Renderable " << id << ", but it does not seem to exist anymore" << std::endl;
-                continue;
-            }
-            Renderable& r = it->second;
-            r.setPosition(pos);
-        }
-        break;
     case PacketType::set_player_id: {
         PlayerID id = p.read<PlayerID>();
         if (m_pidMine != InvalidPlayerID) {
@@ -88,7 +83,7 @@ void ClientPage::onReceive(const void* data, std::size_t size)
         }
         break;
     default:
-        std::cout << "invalid packet type received: " << static_cast<uint32_t>(pt) << std::endl;
+        std::cout << "this packet type is unknown or not meant to be sent by tcp" << std::endl;
         break;
     }
     p.endRead();
@@ -96,7 +91,7 @@ void ClientPage::onReceive(const void* data, std::size_t size)
 
 void ClientPage::PositionChanged(const Renderable& r)
 {
-    Packet p;
+    Packet p(false);
     p.write(PacketType::set_entity_position);
     p.write(r.getID());
     p.write(r.getPosition());
@@ -114,6 +109,7 @@ void ClientPage::update()
 {
     SpacePage::update();
     m_Connection.update();
+    m_MessageSocket.update();
 }
 
 void ClientPage::draw()
@@ -143,7 +139,7 @@ void ClientPage::draw()
 
 void ClientPage::firePlasma(Vector direction)
 {
-    Packet p;
+    Packet p(false);
     p.write(PacketType::fire_plasma);
     p.write(direction);
     sendPacket(p);
@@ -160,7 +156,7 @@ void ClientPage::sendPacket(const Packet& p)
             std::cout << "tried to send a packet by udp that surpasses maximum length of " << m_MessageSocket.maxMessageSize() << " bytes" << std::endl;
             return;
         }
-        m_MessageSocket.send(m_Connection.address(), m_Connection.port(), p.buf(), p.buflen());
+        m_MessageSocket.send(m_Connection.address(), m_Port, p.buf(), p.buflen());
     } else {
         m_Connection.send(p.buf(), p.buflen());
         m_Connection.sendPendingData();
@@ -169,8 +165,33 @@ void ClientPage::sendPacket(const Packet& p)
 
 void ClientPage::caughtTroll(RenderableID id)
 {
-    Packet p;
+    Packet p(false);
     p.write(PacketType::catch_troll);
     p.write(id);
     sendPacket(p);
+}
+
+void ClientPage::onReceiveUdp(Gosu::SocketAddress, Gosu::SocketPort, const void* data, std::size_t size)
+{
+    Packet p(data, size);
+    p.beginRead();
+    PacketType pt = p.read<PacketType>();
+    switch (pt) {
+    case PacketType::set_entity_position:
+        while (p.bytesLeftToRead()) {
+            RenderableID id = p.read<RenderableID>();
+            Vector pos = p.read<Vector>();
+            auto it = m_mEntities.find(id);
+            if (it == m_mEntities.end()) {
+                std::cout << "tried to set position of Renderable " << id << ", but it does not seem to exist anymore" << std::endl;
+                continue;
+            }
+            Renderable& r = it->second;
+            r.setPosition(pos);
+        }
+        break;
+        default:
+            std::cout << "this packet type is unknown or not meant to be sent by udp" << std::endl;
+        break;
+    }
 }

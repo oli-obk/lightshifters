@@ -1,7 +1,6 @@
 #ifndef PACKET_H
 #define PACKET_H
 
-#include <Gosu/Sockets.hpp>
 #include <Gosu/Platform.hpp>
 #include <vector>
 #include <cstdint>
@@ -26,8 +25,6 @@ template<> struct get_int_type_of_size<4>{ typedef uint32_t type; };
 template<> struct get_int_type_of_size<8>{ typedef uint64_t type; };
 //template<> struct get_int_type_of_size<16>{ typedef uint128_t type; };
 
-struct SendByUdp{};
-
 class Packet {
 
 private:
@@ -43,9 +40,7 @@ public:
     // receive
 	Packet(const void* data, size_t size);
     // send by tcp
-    Packet();
-    // send by udp
-    Packet(SendByUdp);
+    Packet(bool tcp = true);
 	~Packet();
 	const void* buf() const;
 	std::size_t buflen() const;

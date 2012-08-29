@@ -23,7 +23,7 @@ void Bullet::update()
         return;
     }
     setPosition(getPosition()+m_vecDirection);
-    Packet p;
+    Packet p(false);
     p.write(PacketType::set_entity_position);
     p.write(getID());
     p.write(getPosition());

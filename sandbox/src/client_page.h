@@ -14,16 +14,18 @@ public:
     Gosu::MessageSocket m_MessageSocket;
     EntityMap m_mEntities;
     std::map<PlayerID, size_t> m_mTrollsCaught;
+    Gosu::SocketPort m_Port;
 private:
     ClientPage(const ClientPage& rhs);
     ClientPage& operator=(const ClientPage& rhs);
     void onDisconnection();
     void onReceive(const void*, std::size_t);
+    void onReceiveUdp(Gosu::SocketAddress, Gosu::SocketPort, const void*, std::size_t);
 
     void firePlasma(Vector direction);
     void sendPacket(const Packet& p);
 public:
-    ClientPage(std::string addr, uint16_t port, uint16_t host_port);
+    ClientPage(std::string addr, Gosu::SocketPort port, Gosu::SocketPort host_port);
     ~ClientPage();
     void PositionChanged(const Renderable&);
     Renderable& getEntity(RenderableID id);

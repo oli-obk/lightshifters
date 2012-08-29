@@ -37,10 +37,15 @@ ServerPage::ServerPage(uint16_t port)
     s_pInstance = this;
     m_pidNext = 1;
     m_pidMine = 0;
-    m_ListenerSocket.onConnection = std::bind(&ServerPage::onConnection, this, std::placeholders::_1);
+    using namespace std::placeholders;
+    m_ListenerSocket.onConnection = std::bind(&ServerPage::onConnection, this, _1);
+    m_MessageSocket.onReceive = std::bind(&ServerPage::onReceiveUdp, this, _1, _2, _3, _4);
     generateSpace();
     Renderable& r = createEntity<Player>(m_pidMine);
-    m_mPlayers[m_pidMine].PlayerEntity = r.getID();
+    PlayerState player(std::unique_ptr<Gosu::CommSocket>(nullptr));
+    player.PlayerEntity = r.getID();
+    player.TrollsCaught = 0;
+    m_mPlayers.insert(std::make_pair(m_pidMine, std::move(player)));
     m_pPlayerRenderable = &r;
 }
 
@@ -50,13 +55,20 @@ void ServerPage::onConnection(Gosu::Socket& sock)
     Renderable& r = createEntity<Player>(m_pidNext);
     
     // now add new connection
-    auto pair = m_sClients.insert(std::make_pair(m_pidNext, new Gosu::CommSocket(Gosu::cmManaged, sock)));
-    Gosu::CommSocket& cs = *(pair.first->second);
-    cs.onDisconnection = std::bind(&ServerPage::onDisconnection, this, pair.first);
+    PlayerMap::iterator it;
+    {
+        PlayerState player(std::unique_ptr<Gosu::CommSocket>(new Gosu::CommSocket(Gosu::cmManaged, sock)));
+        player.TrollsCaught = 0;
+        player.UdpPort = 0;
+        player.PlayerEntity = r.getID();
+        auto pair = m_mPlayers.insert(std::make_pair(m_pidNext, std::move(player)));
+        assert(pair.second);
+        it = pair.first;
+    }
+    Gosu::CommSocket& cs = *(it->second.Socket);
+    cs.onDisconnection = std::bind(&ServerPage::onDisconnection, this, it);
     cs.onReceive = std::bind(&ServerPage::onReceive, this, m_pidNext, std::placeholders::_1, std::placeholders::_2);
     std::cout << "new connection from: " << Gosu::addressToString(cs.address()) << ":" << cs.port() << std::endl;
-
-    m_mPlayers[m_pidNext].PlayerEntity = r.getID();
     
     // notify the player of it's player id
     Packet p2;
@@ -109,10 +121,12 @@ void ServerPage::update()
 {
     SpacePage::update();
     m_ListenerSocket.update();
-for(auto& it : m_sClients) {
-        it.second->update();
+    m_MessageSocket.update();
+    for(auto& it : m_mPlayers) {
+        if (!it.second.Socket) continue;
+        it.second.Socket->update();
     }
-for(auto& it : m_mEntities) {
+    for(auto& it : m_mEntities) {
         it.second->update();
     }
     if (!m_pPlayerRenderable) return;
@@ -146,29 +160,37 @@ for (auto& it: m_mPlayers) {
 
 
 
-void ServerPage::onDisconnection(SocketSet::iterator it)
+void ServerPage::onDisconnection(PlayerMap::iterator it)
 {
     // the Socket is already invalid, DO NOT ACCESS INSIDE THIS FUNCTION
     //const Gosu::CommSocket& cs = **it;
     //std::cout << "lost connection to: " << Gosu::addressToString(cs.address()) << ":" << cs.port() << std::endl;
-    m_sClients.erase(it);
+    m_mPlayers.erase(it);
 }
 
-
-void ServerPage::onReceive(PlayerID player_id, const void* data, std::size_t size)
+void ServerPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, const void* data, std::size_t size)
 {
+    PlayerID player_id = InvalidPlayerID;
+    //std::cout << "udp packet from: " << Gosu::addressToString(addr) << ":" << port << std::endl;
+    PlayerState* pPlayer = nullptr;
+    for(auto& it : m_mPlayers) {
+        if (!it.second.Socket) continue;
+        if (it.second.Socket->address() != addr) continue;
+        if (it.second.UdpPort != port) continue;
+        player_id = it.first;
+        pPlayer = &it.second;
+        break;
+    }
+    if (player_id == InvalidPlayerID) {
+        std::cout << "some hotshot sent us a udp packet but is not in our game: ";
+        std::cout << Gosu::addressToString(addr) << ":" << port << std::endl;
+        return;
+    }
+    PlayerState& player = *pPlayer;
     Packet p(data, size);
     p.beginRead();
     PacketType pt = p.read<PacketType>();
     switch (pt) {
-    case PacketType::create_entities:
-        // as the server i do not accept these packets
-        std::cout << "client tried to create/change entities" << std::endl;
-        break;
-    case PacketType::delete_entities:
-        // as the server i do not accept these packets
-        std::cout << "client tried to delete entities" << std::endl;
-        break;
     case PacketType::set_entity_position:
         while (p.bytesLeftToRead()) {
             RenderableID id = p.read<RenderableID>();
@@ -186,35 +208,69 @@ void ServerPage::onReceive(PlayerID player_id, const void* data, std::size_t siz
         break;
     case PacketType::catch_troll: {
         RenderableID id = p.read<RenderableID>();
-        Renderable& player = *m_mEntities[m_mPlayers[player_id].PlayerEntity];
+        auto playerit = m_mPlayers.find(player_id);
+        assert(playerit != m_mPlayers.end());
+        
+        Renderable& playerentity = *m_mEntities[player.PlayerEntity];
         auto it = m_mEntities.find(id);
         if (it == m_mEntities.end()) {
             std::cout << "tried to catch not existing troll" << std::endl;
             break;
         }
-        if ((player.getPosition() - it->second->getPosition()).magnitudeSquared() > 10*10) break;
+        if ((playerentity.getPosition() - it->second->getPosition()).magnitudeSquared() > 10*10) break;
         eraseEntity(id);
-        m_mPlayers[player_id].TrollsCaught++;
+        player.TrollsCaught++;
         Packet p2;
         p2.write(PacketType::scoreboard);
         p2.write(player_id);
-        p2.write<uint32_t>(m_mPlayers[player_id].TrollsCaught);
+        p2.write<uint32_t>(player.TrollsCaught);
         sendPacketToAll(p2);
     }
     break;
-    case PacketType::fire_plasma: {
+    case PacketType::fire_plasma:
+    {
         Vector dir = p.read<Vector>();
         dir.normalize();
-        createEntity<Bullet>(dir).setPosition(m_mEntities[m_mPlayers[player_id].PlayerEntity]->getPosition());
+        createEntity<Bullet>(dir).setPosition(m_mEntities[player.PlayerEntity]->getPosition());
     }
+    break;
     default:
-        std::cout << "invalid packet type received: " << static_cast<uint32_t>(pt) << std::endl;
+        std::cout << "invalid packet or not meant to be sent by udp" << std::endl;
+        break;
+    }
+}
+
+void ServerPage::onReceive(PlayerID player_id, const void* data, std::size_t size)
+{
+    auto playerit = m_mPlayers.find(player_id);
+    assert(playerit != m_mPlayers.end());
+    PlayerState& player = playerit->second;
+    Packet p(data, size);
+    p.beginRead();
+    PacketType pt = p.read<PacketType>();
+    switch (pt) {
+    case PacketType::create_entities:
+        // as the server i do not accept these packets
+        std::cout << "client tried to create/change entities" << std::endl;
+        break;
+    case PacketType::delete_entities:
+        // as the server i do not accept these packets
+        std::cout << "client tried to delete entities" << std::endl;
+        break;
+    case PacketType::udp_port_update:
+    {
+        uint16_t port = p.read<uint16_t>();
+        player.UdpPort = port;
+    }
+    break;
+    default:
+        std::cout << "invalid packet or not meant to be sent by tcp" << std::endl;
         break;
     }
     p.endRead();
 }
 
-void ServerPage::send(const Packet& p, Gosu::CommSocket& cs)
+void ServerPage::send(const Packet& p, PlayerState& player)
 {
     if (p.buflen() == 0) {
         std::cout << "tried to send zero length data" << std::endl;
@@ -225,31 +281,32 @@ void ServerPage::send(const Packet& p, Gosu::CommSocket& cs)
             std::cout << "tried to send a packet by udp that surpasses maximum length of " << m_MessageSocket.maxMessageSize() << " bytes" << std::endl;
             return;
         }
-        m_MessageSocket.send(cs.address(), cs.port(), p.buf(), p.buflen());
+        m_MessageSocket.send(player.Socket->address(), player.UdpPort, p.buf(), p.buflen());
     } else {
-        cs.send(p.buf(), p.buflen());
-        cs.sendPendingData();
+        player.Socket->send(p.buf(), p.buflen());
+        player.Socket->sendPendingData();
     }
 }
 
-void ServerPage::sendPacketTo(const Packet& p, PlayerID player)
+void ServerPage::sendPacketTo(const Packet& p, PlayerID playerid)
 {
-    Gosu::CommSocket& cs = *m_sClients[player];
-    send(p, cs);
+    auto it = m_mPlayers.find(playerid);
+    assert(it != m_mPlayers.end());
+    send(p, it->second);
 }
 
 void ServerPage::sendPacketToAll(const Packet& p, PlayerID exclude)
 {
-for (auto& ptr : m_sClients) {
+    for (auto& ptr : m_mPlayers) {
+        if (!ptr.second.Socket) continue;
         if (ptr.first == exclude) continue;
-        Gosu::CommSocket& cs = *(ptr.second);
-        send(p, cs);
+        send(p, ptr.second);
     }
 }
 
 void ServerPage::PositionChanged(const Renderable& r)
 {
-    Packet p;
+    Packet p(false);
     p.write(PacketType::set_entity_position);
     p.write(r.getID());
     p.write(r.getPosition());
@@ -280,5 +337,7 @@ void ServerPage::firePlasma(Vector direction)
 void ServerPage::caughtTroll(RenderableID id)
 {
     eraseEntity(id);
-    m_mPlayers[m_pidMine].TrollsCaught++;
+    auto it = m_mPlayers.find(m_pidMine);
+    assert(it != m_mPlayers.end());
+    it->second.TrollsCaught++;
 }

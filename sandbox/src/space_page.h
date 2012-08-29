@@ -77,7 +77,6 @@ protected:
     virtual Renderable& getEntity(RenderableID id) = 0;
     void render(const Renderable&);
 public:
-	void sendPacketToAll(const Packet& p);
 	SpacePage();
 	~SpacePage();
 	virtual void update();
