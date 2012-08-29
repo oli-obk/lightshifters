@@ -19,9 +19,9 @@
 #include "packet.h"
 
 SpacePage::SpacePage()
-	:m_Font(PageManager::Instance()->graphics(), Gosu::defaultFontName(), 20)
-	,m_rotPlayer(Quaternion::identity())
+	:m_rotPlayer(Quaternion::identity())
     ,m_matGlobalToLocal(Matrix::identity())
+    ,m_Font(PageManager::Instance()->graphics(), Gosu::defaultFontName(), 20)
 {
     m_pidMine = InvalidPlayerID;
 	Gosu::Input& i = PageManager::Instance()->input();
@@ -110,6 +110,9 @@ void SpacePage::rotateDegrees(Vector axis, double angle)
 
 void SpacePage::update()
 {
+    if (m_Closest.m_bValid && m_Closest.m_dDistSquared < 10*10) {
+        this->caughtTroll(m_Closest.m_ID);
+    }
 	Gosu::Input& i = PageManager::Instance()->input();
 
 	if (i.down(m_kbSpinLeft)) {
@@ -178,7 +181,10 @@ void SpacePage::PlayerPositionChanged()
 
 void SpacePage::refreshMatrix()
 {
-    if (!m_pPlayerRenderable) return;
+    if (!m_pPlayerRenderable) {
+        m_matGlobalToLocal = m_rotPlayer.inverted().toMatrix();
+        return;
+    }
 	m_matGlobalToLocal = m_rotPlayer.inverted().toMatrix().translated(-m_pPlayerRenderable->getPosition());
 }
 

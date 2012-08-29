@@ -13,9 +13,12 @@ Renderable& createEntity(ClientPage::EntityMap& list, const Packet& p)
     return it.first->second;
 }
 
-ClientPage::ClientPage(std::string addr, uint16_t port)
+ClientPage::ClientPage(std::string addr, uint16_t port, uint16_t host_port)
     :m_Connection(Gosu::cmManaged, Gosu::stringToAddress(addr), port)
+    ,m_MessageSocket(host_port)
 {
+    std::cout << "listening on udp " << host_port << std::endl;
+    std::cout << "connected to tcp " << m_Connection.address() << ":" << m_Connection.port() << std::endl;
     m_Connection.onDisconnection = std::bind(&ClientPage::onDisconnection, this);
     m_Connection.onReceive = std::bind(&ClientPage::onReceive, this, std::placeholders::_1, std::placeholders::_2);
 }
@@ -42,8 +45,6 @@ void ClientPage::onReceive(const void* data, std::size_t size)
             if (r.getOwner() == m_pidMine) {
                 m_pPlayerRenderable = &r;
             }
-            std::cout << "new item of type: " << r.getType() << " at " << r.getPosition() << " with scale " << r.getScale() << std::endl;
-            std::cout << Gosu::narrow(r.getImageName()) << std::endl;
         }
         break;
     case PacketType::delete_entities:
@@ -75,6 +76,7 @@ void ClientPage::onReceive(const void* data, std::size_t size)
         if (m_pidMine != InvalidPlayerID) {
             std::cout << "warning, changing player id when already had a valid id" << std::endl;
         }
+        std::cout << "My Player id is now: " << id << std::endl;
         m_pidMine = id;
     }
     break;
@@ -98,7 +100,7 @@ void ClientPage::PositionChanged(const Renderable& r)
     p.write(PacketType::set_entity_position);
     p.write(r.getID());
     p.write(r.getPosition());
-    p.writeTo(m_Connection);
+    sendPacket(p);
 }
 
 Renderable& ClientPage::getEntity(RenderableID id)
@@ -111,24 +113,18 @@ Renderable& ClientPage::getEntity(RenderableID id)
 void ClientPage::update()
 {
     SpacePage::update();
-    if (m_Closest.m_bValid && m_Closest.m_dDistSquared < 10*10) {
-        Packet p;
-        p.write(PacketType::catch_troll);
-        p.write(m_Closest.m_ID);
-        p.writeTo(m_Connection);
-    }
     m_Connection.update();
 }
 
 void ClientPage::draw()
 {
     SpacePage::draw();
-for (auto& it: m_mEntities) {
+    for (auto& it: m_mEntities) {
         render(it.second);
     }
     {
         double pos = 10;
-for (auto& it: m_mTrollsCaught) {
+            for (auto& it: m_mTrollsCaught) {
             std::wstringstream wss;
             if (it.first == m_pidMine) {
                 wss << L"You";
@@ -150,5 +146,31 @@ void ClientPage::firePlasma(Vector direction)
     Packet p;
     p.write(PacketType::fire_plasma);
     p.write(direction);
-    p.writeTo(m_Connection);
+    sendPacket(p);
+}
+
+void ClientPage::sendPacket(const Packet& p)
+{
+    if (p.buflen() == 0) {
+        std::cout << "tried to send zero length data" << std::endl;
+        return;
+    }
+    if (p.sendByUdp()) {
+        if (p.buflen() > m_MessageSocket.maxMessageSize()) {
+            std::cout << "tried to send a packet by udp that surpasses maximum length of " << m_MessageSocket.maxMessageSize() << " bytes" << std::endl;
+            return;
+        }
+        m_MessageSocket.send(m_Connection.address(), m_Connection.port(), p.buf(), p.buflen());
+    } else {
+        m_Connection.send(p.buf(), p.buflen());
+        m_Connection.sendPendingData();
+    }
+}
+
+void ClientPage::caughtTroll(RenderableID id)
+{
+    Packet p;
+    p.write(PacketType::catch_troll);
+    p.write(id);
+    sendPacket(p);
 }

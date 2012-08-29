@@ -26,6 +26,8 @@ template<> struct get_int_type_of_size<4>{ typedef uint32_t type; };
 template<> struct get_int_type_of_size<8>{ typedef uint64_t type; };
 //template<> struct get_int_type_of_size<16>{ typedef uint128_t type; };
 
+struct SendByUdp{};
+
 class Packet {
 
 private:
@@ -36,12 +38,18 @@ private:
 	const size_t m_voidSize;
 	mutable size_t m_uCurReadPos;
 	mutable bool m_bReadInProgress;
+    bool m_bSendByUdp;
 public:
-	Packet(const void* data = nullptr, size_t size = 0);
+    // receive
+	Packet(const void* data, size_t size);
+    // send by tcp
+    Packet();
+    // send by udp
+    Packet(SendByUdp);
 	~Packet();
 	const void* buf() const;
 	std::size_t buflen() const;
-	void writeTo(Gosu::CommSocket& cs) const;
+    bool sendByUdp() const;
 	void beginRead() const;
 	void endRead() const;
 	size_t bytesLeftToRead() const;

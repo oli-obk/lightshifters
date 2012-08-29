@@ -56,23 +56,23 @@ struct ClosestHud
 
 class SpacePage : public Page
 {
-protected:
+private:
 	SpacePage(const SpacePage& rhs);
 	SpacePage& operator=(const SpacePage& rhs);
-	Gosu::Font m_Font;
 	Quaternion m_rotPlayer;
 	void setupDirs();
 	void rotateDegrees(Vector axis, double angle);
 	Gosu::Button m_kbForward, m_kbBackward, m_kbStrafeRight, m_kbStrafeLeft;
 	Gosu::Button m_kbStrafeUp, m_kbStrafeDown, m_kbSpinLeft, m_kbSpinRight;
 	bool m_bInvertMouse;
-	PlayerID m_pidMine;
     Matrix m_matGlobalToLocal;
     ClosestHud m_Closest;
     void refreshMatrix();
     void PlayerPositionChanged();
-    Renderable* m_pPlayerRenderable;
 protected:
+	Gosu::Font m_Font;
+	PlayerID m_pidMine;
+    Renderable* m_pPlayerRenderable;
     virtual void PositionChanged(const Renderable&) = 0;
     virtual Renderable& getEntity(RenderableID id) = 0;
     void render(const Renderable&);
@@ -84,6 +84,7 @@ public:
 	bool needsCursor() const;
     void buttonUp(Gosu::Button btn);
     virtual void firePlasma(Vector direction) = 0;
+    virtual void caughtTroll(RenderableID id) = 0;
 
 	virtual void draw();
 

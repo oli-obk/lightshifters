@@ -24,6 +24,7 @@ public:
     static ServerPage& getInstance();
 private:
     Gosu::ListenerSocket m_ListenerSocket;
+    Gosu::MessageSocket m_MessageSocket;
     void generateSpace();
     typedef std::map<PlayerID, std::unique_ptr<Gosu::CommSocket> > SocketSet;
     SocketSet m_sClients;
@@ -40,10 +41,14 @@ private:
     void update();
     void draw();
 
+    void caughtTroll(RenderableID id);
+
     template<class T, typename... Args>
     T& createEntity(Args... args);
+    void send(const Packet& p, Gosu::CommSocket& sc);
 public:
-    void sendPacketToAll(const Packet& p);
+    void sendPacketToAll(const Packet& p, PlayerID exclude = InvalidPlayerID);
+    void sendPacketTo(const Packet& p, PlayerID player);
     ServerPage(uint16_t port);
     ~ServerPage();
 

@@ -11,6 +11,7 @@ class ClientPage : public SpacePage
 public:
     typedef std::map<RenderableID, Renderable> EntityMap;
     Gosu::CommSocket m_Connection;
+    Gosu::MessageSocket m_MessageSocket;
     EntityMap m_mEntities;
     std::map<PlayerID, size_t> m_mTrollsCaught;
 private:
@@ -20,14 +21,16 @@ private:
     void onReceive(const void*, std::size_t);
 
     void firePlasma(Vector direction);
-
+    void sendPacket(const Packet& p);
 public:
-    ClientPage(std::string addr, uint16_t port);
+    ClientPage(std::string addr, uint16_t port, uint16_t host_port);
     ~ClientPage();
     void PositionChanged(const Renderable&);
     Renderable& getEntity(RenderableID id);
     void update();
     void draw();
+    void caughtTroll(RenderableID id);
+
 };
 
 #endif // CLIENTPAGE_H

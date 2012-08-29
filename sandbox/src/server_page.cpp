@@ -30,7 +30,9 @@ ServerPage& ServerPage::getInstance()
 
 ServerPage::ServerPage(uint16_t port)
     :m_ListenerSocket(port)
+    ,m_MessageSocket(port)
 {
+    std::cout << "listening on tcp " << m_ListenerSocket.address() << ":" << m_ListenerSocket.port() << " and udp " << m_MessageSocket.port() << std::endl;
     assert(!s_pInstance);
     s_pInstance = this;
     m_pidNext = 1;
@@ -44,31 +46,41 @@ ServerPage::ServerPage(uint16_t port)
 
 void ServerPage::onConnection(Gosu::Socket& sock)
 {
+    // create first, so it is not sent to the new player (new player receives all entities anyway)
+    Renderable& r = createEntity<Player>(m_pidNext);
+    
+    // now add new connection
     auto pair = m_sClients.insert(std::make_pair(m_pidNext, new Gosu::CommSocket(Gosu::cmManaged, sock)));
     Gosu::CommSocket& cs = *(pair.first->second);
     cs.onDisconnection = std::bind(&ServerPage::onDisconnection, this, pair.first);
     cs.onReceive = std::bind(&ServerPage::onReceive, this, m_pidNext, std::placeholders::_1, std::placeholders::_2);
     std::cout << "new connection from: " << Gosu::addressToString(cs.address()) << ":" << cs.port() << std::endl;
-    Renderable& r = createEntity<Player>(m_pidNext);
+
     m_mPlayers[m_pidNext].PlayerEntity = r.getID();
+    
+    // notify the player of it's player id
     Packet p2;
     p2.write(PacketType::set_player_id);
     p2.write(m_pidNext);
-    p2.writeTo(cs);
+    sendPacketTo(p2, m_pidNext);
+    
+    // send all entities
     Packet p;
     p.write(PacketType::create_entities);
-    for (auto& ptr: m_mEntities) {
+for (auto& ptr: m_mEntities) {
         Renderable& r2 = *ptr.second;
         r2.serialize(p);
     }
-    p.writeTo(cs);
+    sendPacketTo(p, m_pidNext);
+    
+    // send scoreboard
     Packet p3;
     p3.write(PacketType::scoreboard);
-    for (auto& ptr: m_mPlayers) {
+for (auto& ptr: m_mPlayers) {
         p3.write(ptr.first);
         p3.write<uint32_t>(ptr.second.TrollsCaught);
     }
-    p3.writeTo(cs);
+    sendPacketTo(p3, m_pidNext);
     cs.sendPendingData();
     m_pidNext++;
 }
@@ -97,29 +109,25 @@ void ServerPage::update()
 {
     SpacePage::update();
     m_ListenerSocket.update();
-    for(auto& it : m_sClients) {
+for(auto& it : m_sClients) {
         it.second->update();
     }
-    for(auto& it : m_mEntities) {
+for(auto& it : m_mEntities) {
         it.second->update();
     }
     if (!m_pPlayerRenderable) return;
-    if (m_Closest.m_bValid && m_Closest.m_dDistSquared < 10*10) {
-        eraseEntity(m_Closest.m_ID);
-        m_mPlayers[m_pidMine].TrollsCaught++;
-    }
 }
 
 void ServerPage::draw()
 {
     SpacePage::draw();
-    for (auto& it: m_mEntities) {
+for (auto& it: m_mEntities) {
         const Renderable& r = *it.second;
         render(r);
     }
     {
         double pos = 10;
-        for (auto& it: m_mPlayers) {
+for (auto& it: m_mPlayers) {
             std::wstringstream wss;
             if (it.first == m_pidMine) {
                 wss << L"You";
@@ -176,31 +184,29 @@ void ServerPage::onReceive(PlayerID player_id, const void* data, std::size_t siz
             r.setPosition(pos);
         }
         break;
-    case PacketType::catch_troll:
-        {
-            RenderableID id = p.read<RenderableID>();
-            Renderable& player = *m_mEntities[m_mPlayers[player_id].PlayerEntity];
-            auto it = m_mEntities.find(id);
-            if (it == m_mEntities.end()) {
-                std::cout << "tried to catch not existing troll" << std::endl;
-                break;
-            }
-            if ((player.getPosition() - it->second->getPosition()).magnitudeSquared() > 10*10) break;
-            eraseEntity(id);
-            m_mPlayers[player_id].TrollsCaught++;
-            Packet p2;
-            p2.write(PacketType::scoreboard);
-            p2.write(player_id);
-            p2.write<uint32_t>(m_mPlayers[player_id].TrollsCaught);
-            sendPacketToAll(p2);
+    case PacketType::catch_troll: {
+        RenderableID id = p.read<RenderableID>();
+        Renderable& player = *m_mEntities[m_mPlayers[player_id].PlayerEntity];
+        auto it = m_mEntities.find(id);
+        if (it == m_mEntities.end()) {
+            std::cout << "tried to catch not existing troll" << std::endl;
+            break;
         }
-        break;
-    case PacketType::fire_plasma:
-        {
-            Vector dir = p.read<Vector>();
-            dir.normalize();
-            createEntity<Bullet>(dir).setPosition(m_mEntities[m_mPlayers[player_id].PlayerEntity]->getPosition());
-        }
+        if ((player.getPosition() - it->second->getPosition()).magnitudeSquared() > 10*10) break;
+        eraseEntity(id);
+        m_mPlayers[player_id].TrollsCaught++;
+        Packet p2;
+        p2.write(PacketType::scoreboard);
+        p2.write(player_id);
+        p2.write<uint32_t>(m_mPlayers[player_id].TrollsCaught);
+        sendPacketToAll(p2);
+    }
+    break;
+    case PacketType::fire_plasma: {
+        Vector dir = p.read<Vector>();
+        dir.normalize();
+        createEntity<Bullet>(dir).setPosition(m_mEntities[m_mPlayers[player_id].PlayerEntity]->getPosition());
+    }
     default:
         std::cout << "invalid packet type received: " << static_cast<uint32_t>(pt) << std::endl;
         break;
@@ -208,14 +214,36 @@ void ServerPage::onReceive(PlayerID player_id, const void* data, std::size_t siz
     p.endRead();
 }
 
+void ServerPage::send(const Packet& p, Gosu::CommSocket& cs)
+{
+    if (p.buflen() == 0) {
+        std::cout << "tried to send zero length data" << std::endl;
+        return;
+    }
+    if (p.sendByUdp()) {
+        if (p.buflen() > m_MessageSocket.maxMessageSize()) {
+            std::cout << "tried to send a packet by udp that surpasses maximum length of " << m_MessageSocket.maxMessageSize() << " bytes" << std::endl;
+            return;
+        }
+        m_MessageSocket.send(cs.address(), cs.port(), p.buf(), p.buflen());
+    } else {
+        cs.send(p.buf(), p.buflen());
+        cs.sendPendingData();
+    }
+}
 
+void ServerPage::sendPacketTo(const Packet& p, PlayerID player)
+{
+    Gosu::CommSocket& cs = *m_sClients[player];
+    send(p, cs);
+}
 
-void ServerPage::sendPacketToAll(const Packet& p)
+void ServerPage::sendPacketToAll(const Packet& p, PlayerID exclude)
 {
 for (auto& ptr : m_sClients) {
+        if (ptr.first == exclude) continue;
         Gosu::CommSocket& cs = *(ptr.second);
-        p.writeTo(cs);
-        cs.sendPendingData();
+        send(p, cs);
     }
 }
 
@@ -247,4 +275,10 @@ void ServerPage::eraseEntity(RenderableID id)
 void ServerPage::firePlasma(Vector direction)
 {
     createEntity<Bullet>(direction).setPosition(m_pPlayerRenderable->getPosition());
+}
+
+void ServerPage::caughtTroll(RenderableID id)
+{
+    eraseEntity(id);
+    m_mPlayers[m_pidMine].TrollsCaught++;
 }
