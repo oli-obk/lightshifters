@@ -209,7 +209,10 @@ void ServerPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, c
             Renderable& r = *(it->second);
             // i only accept these packets if they are from the owner
             if (r.getOwner() != player_id) continue;
+            // i only accept position commands for player entities
+            if (r.getType() != "player") continue;
             r.setPosition(pos);
+            sendPacketToAll(p, player_id);
         }
         break;
     case PacketType::catch_troll: {
