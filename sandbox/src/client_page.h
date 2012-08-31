@@ -13,7 +13,7 @@ public:
     Gosu::CommSocket m_Connection;
     Gosu::MessageSocket m_MessageSocket;
     EntityMap m_mEntities;
-    std::map<PlayerID, size_t> m_mTrollsCaught;
+    std::map<PlayerID, int32_t> m_mScore;
     Gosu::SocketPort m_Port;
 private:
     ClientPage(const ClientPage& rhs);
@@ -28,7 +28,7 @@ public:
     ClientPage(std::string addr, Gosu::SocketPort port, Gosu::SocketPort host_port);
     ~ClientPage();
     void PositionChanged(const Renderable&);
-    Renderable& getEntity(RenderableID id);
+    boost::optional<Renderable&> getEntity(RenderableID id);
     void update();
     void draw();
     void caughtTroll(RenderableID id);

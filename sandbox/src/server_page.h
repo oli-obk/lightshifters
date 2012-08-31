@@ -5,6 +5,7 @@
 #include <Gosu/Sockets.hpp>
 #include "RenderableID.h"
 #include <memory>
+#include <boost/optional.hpp>
 
 struct ServerEntity;
 struct Renderable;
@@ -15,7 +16,7 @@ struct PlayerState {
     PlayerState() = delete;
     PlayerState(std::unique_ptr<Gosu::CommSocket> sock):Socket(std::move(sock)) {}
     RenderableID PlayerEntity;
-    size_t TrollsCaught;
+    int32_t Score;
     uint16_t UdpPort;
     std::unique_ptr<Gosu::CommSocket> Socket;
 };
@@ -54,14 +55,17 @@ private:
 public:
     void sendPacketToAll(const Packet& p, PlayerID exclude = InvalidPlayerID);
     void sendPacketTo(const Packet& p, PlayerID player);
+    void bulletHit(ServerEntity& bullet, Renderable& target);
     ServerPage(uint16_t port);
     ~ServerPage();
 
     void PositionChanged(const Renderable&);
-    Renderable& getEntity(RenderableID id);
+    boost::optional<Renderable&> getEntity(RenderableID id);
     void eraseEntity(RenderableID id);
 
+    void firePlasma(Vector position, Vector direction, PlayerID pid);
     void firePlasma(Vector direction);
+    boost::optional<ServerEntity&> getClosestTo(Renderable& other, double maxdist);
 
 };
 

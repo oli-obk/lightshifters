@@ -78,8 +78,8 @@ void ClientPage::onReceive(const void* data, std::size_t size)
     case PacketType::scoreboard:
         while (p.bytesLeftToRead()) {
             PlayerID id = p.read<PlayerID>();
-            size_t trolls = p.read<uint32_t>();
-            m_mTrollsCaught[id] = trolls;
+            int32_t score = p.read<int32_t>();
+            m_mScore[id] = score;
         }
         break;
     default:
@@ -98,11 +98,11 @@ void ClientPage::PositionChanged(const Renderable& r)
     sendPacket(p);
 }
 
-Renderable& ClientPage::getEntity(RenderableID id)
+boost::optional<Renderable&> ClientPage::getEntity(RenderableID id)
 {
     auto it = m_mEntities.find(id);
     assert(it != m_mEntities.end());
-    return it->second;
+    return boost::optional<Renderable&>(it->second);
 }
 
 void ClientPage::update()
@@ -120,17 +120,14 @@ void ClientPage::draw()
     }
     {
         double pos = 10;
-            for (auto& it: m_mTrollsCaught) {
+            for (auto& it: m_mScore) {
             std::wstringstream wss;
             if (it.first == m_pidMine) {
-                wss << L"You";
+                wss << L"You: ";
             } else {
-                wss << L"Player " << it.first;
+                wss << L"Player " << it.first << ": ";
             }
-            wss << L" caught " << it.second << L" Troll";
-            if (it.second != 1) {
-                wss << L"s";
-            }
+            wss << it.second;
             m_Font.draw(wss.str(), 10, pos, 10);
             pos += 15;
         }

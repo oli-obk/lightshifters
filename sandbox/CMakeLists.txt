@@ -37,3 +37,5 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 else()
 	message(FATAL_ERROR "unknown build type: " ${CMAKE_BUILD_TYPE})
 endif()
+
+#set(CMAKE_VERBOSE_MAKEFILE ON)

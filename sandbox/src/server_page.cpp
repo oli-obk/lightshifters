@@ -13,6 +13,7 @@ T& ServerPage::createEntity(Args... args)
 {
     std::unique_ptr<T> ptr(new T(args...));
     T& r = *ptr;
+    std::cout << "creating " << r.getID() << " of type " << r.getType() << std::endl;
     m_mEntities.insert(std::make_pair(r.getID(), std::move(ptr)));
     Packet p;
     p.write(PacketType::create_entities);
@@ -44,7 +45,7 @@ ServerPage::ServerPage(uint16_t port)
     Renderable& r = createEntity<Player>(m_pidMine);
     PlayerState player(std::unique_ptr<Gosu::CommSocket>(nullptr));
     player.PlayerEntity = r.getID();
-    player.TrollsCaught = 0;
+    player.Score = 0;
     m_mPlayers.insert(std::make_pair(m_pidMine, std::move(player)));
     m_pPlayerRenderable = &r;
 }
@@ -58,7 +59,7 @@ void ServerPage::onConnection(Gosu::Socket& sock)
     PlayerMap::iterator it;
     {
         PlayerState player(std::unique_ptr<Gosu::CommSocket>(new Gosu::CommSocket(Gosu::cmManaged, sock)));
-        player.TrollsCaught = 0;
+        player.Score = 0;
         player.UdpPort = 0;
         player.PlayerEntity = r.getID();
         auto pair = m_mPlayers.insert(std::make_pair(m_pidNext, std::move(player)));
@@ -88,9 +89,9 @@ for (auto& ptr: m_mEntities) {
     // send scoreboard
     Packet p3;
     p3.write(PacketType::scoreboard);
-for (auto& ptr: m_mPlayers) {
+    for (auto& ptr: m_mPlayers) {
         p3.write(ptr.first);
-        p3.write<uint32_t>(ptr.second.TrollsCaught);
+        p3.write<uint32_t>(ptr.second.Score);
     }
     sendPacketTo(p3, m_pidNext);
     cs.sendPendingData();
@@ -141,17 +142,14 @@ for (auto& it: m_mEntities) {
     }
     {
         double pos = 10;
-for (auto& it: m_mPlayers) {
+        for (auto& it: m_mPlayers) {
             std::wstringstream wss;
             if (it.first == m_pidMine) {
-                wss << L"You";
+                wss << L"You: ";
             } else {
-                wss << L"Player " << it.first;
+                wss << L"Player " << it.first << ": ";
             }
-            wss << L" caught " << it.second.TrollsCaught << L" Troll";
-            if (it.second.TrollsCaught != 1) {
-                wss << L"s";
-            }
+            wss << it.second.Score;
             m_Font.draw(wss.str(), 10, pos, 10);
             pos += 15;
         }
@@ -219,11 +217,11 @@ void ServerPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, c
         }
         if ((playerentity.getPosition() - it->second->getPosition()).magnitudeSquared() > 10*10) break;
         eraseEntity(id);
-        player.TrollsCaught++;
+        player.Score++;
         Packet p2;
         p2.write(PacketType::scoreboard);
         p2.write(player_id);
-        p2.write<uint32_t>(player.TrollsCaught);
+        p2.write(player.Score);
         sendPacketToAll(p2);
     }
     break;
@@ -231,7 +229,7 @@ void ServerPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, c
     {
         Vector dir = p.read<Vector>();
         dir.normalize();
-        createEntity<Bullet>(dir).setPosition(m_mEntities[player.PlayerEntity]->getPosition());
+        firePlasma(m_mEntities[player.PlayerEntity]->getPosition(), dir, player_id);
     }
     break;
     default:
@@ -313,15 +311,16 @@ void ServerPage::PositionChanged(const Renderable& r)
     sendPacketToAll(p);
 }
 
-Renderable& ServerPage::getEntity(RenderableID id)
+boost::optional<Renderable&> ServerPage::getEntity(RenderableID id)
 {
     auto it = m_mEntities.find(id);
     assert(it != m_mEntities.end());
-    return *(it->second);
+    return boost::optional<Renderable&>(static_cast<Renderable&>(*(it->second)));
 }
 
 void ServerPage::eraseEntity(RenderableID id)
 {
+    std::cout << "erasing " << id << std::endl;
     m_mEntities.erase(id);
     Packet p;
     p.write(PacketType::delete_entities);
@@ -329,9 +328,18 @@ void ServerPage::eraseEntity(RenderableID id)
     sendPacketToAll(p);
 }
 
+
 void ServerPage::firePlasma(Vector direction)
 {
-    createEntity<Bullet>(direction).setPosition(m_pPlayerRenderable->getPosition());
+    firePlasma(m_pPlayerRenderable->getPosition(), direction, m_pidMine);
+}
+
+void ServerPage::firePlasma(Vector pos, Vector direction, PlayerID pid)
+{
+    Bullet& bullet = createEntity<Bullet>(direction);
+    std::cout << pid << " fired a bullet" << std::endl;
+    bullet.setPosition(pos);
+    bullet.setOwner(pid);
 }
 
 void ServerPage::caughtTroll(RenderableID id)
@@ -339,5 +347,49 @@ void ServerPage::caughtTroll(RenderableID id)
     eraseEntity(id);
     auto it = m_mPlayers.find(m_pidMine);
     assert(it != m_mPlayers.end());
-    it->second.TrollsCaught++;
+    it->second.Score++;
+}
+
+boost::optional<ServerEntity&> ServerPage::getClosestTo(Renderable& r, double maxdist)
+{
+    double maxsq = maxdist*maxdist;
+    ClosestHud closest;
+    for(auto& it: m_mEntities)
+    {
+        // do not check self
+        if (it.first == r.getID()) continue;
+        closest.check(*it.second, r.getPosition());
+    }
+    if (!closest.m_bValid) return boost::optional<ServerEntity&>();
+    if (closest.m_dDistSquared > maxsq) return boost::optional<ServerEntity&>();
+    return boost::optional<ServerEntity&>(*m_mEntities[closest.m_ID]);
+}
+
+void ServerPage::bulletHit(ServerEntity& bullet, Renderable& target)
+{
+    // only hit players
+    if (target.getType() != "player") return;
+    // do not self-hit
+    if (target.getOwner() == bullet.getOwner()) return;
+    auto looser = m_mPlayers.find(target.getOwner());
+    auto winner = m_mPlayers.find(bullet.getOwner());
+    if (looser == m_mPlayers.end()) {
+        std::cout << "bullet hit nonexisting player" << std::endl;
+        return;
+    }
+    if (winner == m_mPlayers.end()) {
+        std::cout << "bullet of nonexisting player hit existing player" << std::endl;
+        return;
+    }
+    std::cout << winner->first << "'s bullet hit " << looser->first << std::endl;
+    looser->second.Score--;
+    winner->second.Score++;
+    Packet p2;
+    p2.write(PacketType::scoreboard);
+    p2.write(looser->first);
+    p2.write(looser->second.Score);
+    p2.write(winner->first);
+    p2.write(winner->second.Score);
+    sendPacketToAll(p2);
+    eraseEntity(bullet.getID());
 }

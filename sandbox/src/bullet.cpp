@@ -28,4 +28,10 @@ void Bullet::update()
     p.write(getID());
     p.write(getPosition());
     page.sendPacketToAll(p);
+    auto found = page.getClosestTo(*this, 10);
+    if (found) {
+        Renderable& r = *found;
+        page.bulletHit(*this, r);
+        return;
+    }
 }
