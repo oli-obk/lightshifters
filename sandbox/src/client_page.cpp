@@ -50,8 +50,13 @@ void ClientPage::onReceive(const void* data, std::size_t size)
     case PacketType::create_entities:
         while (p.bytesLeftToRead()) {
             Renderable& r = createEntity(m_mEntities, p);
-            if (r.getOwner() == m_pidMine) {
-                m_pPlayerRenderable = &r;
+            std::cout << "received " << r.getID() << " of type " << r.getType() << std::endl;
+            if (!m_pPlayerRenderable) {
+                if (r.getType() == "player") {
+                    if (r.getOwner() == m_pidMine) {
+                        m_pPlayerRenderable = &r;
+                    }
+                }
             }
         }
         break;
