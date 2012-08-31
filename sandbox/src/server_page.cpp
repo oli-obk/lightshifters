@@ -158,12 +158,20 @@ for (auto& it: m_mEntities) {
 
 
 
-void ServerPage::onDisconnection(PlayerMap::iterator it)
+void ServerPage::onDisconnection(PlayerMap::iterator connit)
 {
     // the Socket is already invalid, DO NOT ACCESS INSIDE THIS FUNCTION
     //const Gosu::CommSocket& cs = **it;
     //std::cout << "lost connection to: " << Gosu::addressToString(cs.address()) << ":" << cs.port() << std::endl;
-    m_mPlayers.erase(it);
+    PlayerID pid = connit->first;
+    for (auto it = m_mEntities.begin(); it != m_mEntities.end();) {
+        auto to_erase = it++;
+        assert(to_erase->second);
+        Renderable& r = *(to_erase->second);
+        if (r.getOwner() != pid) continue;
+        eraseEntity(to_erase);
+    }
+    m_mPlayers.erase(connit);
 }
 
 void ServerPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, const void* data, std::size_t size)
@@ -320,12 +328,7 @@ boost::optional<Renderable&> ServerPage::getEntity(RenderableID id)
 
 void ServerPage::eraseEntity(RenderableID id)
 {
-    std::cout << "erasing " << id << std::endl;
-    m_mEntities.erase(id);
-    Packet p;
-    p.write(PacketType::delete_entities);
-    p.write(id);
-    sendPacketToAll(p);
+    eraseEntity(m_mEntities.find(id));
 }
 
 
@@ -392,4 +395,16 @@ void ServerPage::bulletHit(ServerEntity& bullet, Renderable& target)
     p2.write(winner->second.Score);
     sendPacketToAll(p2);
     eraseEntity(bullet.getID());
+}
+
+void ServerPage::eraseEntity(EntityMap::iterator it)
+{
+    assert(it != m_mEntities.end());
+    RenderableID id = it->first;
+    std::cout << "erasing " << id << std::endl;
+    m_mEntities.erase(it);
+    Packet p;
+    p.write(PacketType::delete_entities);
+    p.write(id);
+    sendPacketToAll(p);
 }

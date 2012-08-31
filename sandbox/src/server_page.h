@@ -62,6 +62,7 @@ public:
     void PositionChanged(const Renderable&);
     boost::optional<Renderable&> getEntity(RenderableID id);
     void eraseEntity(RenderableID id);
+    void eraseEntity(EntityMap::iterator id);
 
     void firePlasma(Vector position, Vector direction, PlayerID pid);
     void firePlasma(Vector direction);
