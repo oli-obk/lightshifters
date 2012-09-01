@@ -103,11 +103,11 @@ void ClientPage::PositionChanged(const Renderable& r)
     sendPacket(p);
 }
 
-boost::optional<Renderable&> ClientPage::getEntity(RenderableID id)
+optional<Renderable&> ClientPage::getEntity(RenderableID id)
 {
     auto it = m_mEntities.find(id);
     assert(it != m_mEntities.end());
-    return boost::optional<Renderable&>(it->second);
+    return optional<Renderable&>(it->second);
 }
 
 void ClientPage::update()

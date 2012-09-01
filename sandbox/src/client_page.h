@@ -28,7 +28,7 @@ public:
     ClientPage(std::string addr, Gosu::SocketPort port, Gosu::SocketPort host_port);
     ~ClientPage();
     void PositionChanged(const Renderable&);
-    boost::optional<Renderable&> getEntity(RenderableID id);
+    optional<Renderable&> getEntity(RenderableID id);
     void update();
     void draw();
     void caughtTroll(RenderableID id);

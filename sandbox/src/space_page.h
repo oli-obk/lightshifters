@@ -12,7 +12,7 @@
 #include "Vector.h"
 #include "Quaternion.h"
 #include "Matrix.h"
-#include <boost/optional.hpp>
+#include "optional.hpp"
 
 static const double s_to_min = 1.0/60.0;
 static const double min_to_h = 1.0/60.0;
@@ -76,7 +76,7 @@ protected:
 	PlayerID m_pidMine;
     Renderable* m_pPlayerRenderable;
     virtual void PositionChanged(const Renderable&) = 0;
-    virtual boost::optional<Renderable&> getEntity(RenderableID id) = 0;
+    virtual optional<Renderable&> getEntity(RenderableID id) = 0;
     void render(const Renderable&);
 public:
 	SpacePage();

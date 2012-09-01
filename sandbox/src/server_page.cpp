@@ -322,11 +322,11 @@ void ServerPage::PositionChanged(const Renderable& r)
     sendPacketToAll(p);
 }
 
-boost::optional<Renderable&> ServerPage::getEntity(RenderableID id)
+optional<Renderable&> ServerPage::getEntity(RenderableID id)
 {
     auto it = m_mEntities.find(id);
     assert(it != m_mEntities.end());
-    return boost::optional<Renderable&>(static_cast<Renderable&>(*(it->second)));
+    return optional<Renderable&>(static_cast<Renderable&>(*(it->second)));
 }
 
 void ServerPage::eraseEntity(RenderableID id)
@@ -356,7 +356,7 @@ void ServerPage::caughtTroll(RenderableID id)
     it->second.Score++;
 }
 
-boost::optional<ServerEntity&> ServerPage::getClosestTo(Renderable& r, double maxdist)
+optional<ServerEntity&> ServerPage::getClosestTo(Renderable& r, double maxdist)
 {
     double maxsq = maxdist*maxdist;
     ClosestHud closest;
@@ -366,9 +366,9 @@ boost::optional<ServerEntity&> ServerPage::getClosestTo(Renderable& r, double ma
         if (it.first == r.getID()) continue;
         closest.check(*it.second, r.getPosition());
     }
-    if (!closest.m_bValid) return boost::optional<ServerEntity&>();
-    if (closest.m_dDistSquared > maxsq) return boost::optional<ServerEntity&>();
-    return boost::optional<ServerEntity&>(*m_mEntities[closest.m_ID]);
+    if (!closest.m_bValid) return optional<ServerEntity&>();
+    if (closest.m_dDistSquared > maxsq) return optional<ServerEntity&>();
+    return optional<ServerEntity&>(*m_mEntities[closest.m_ID]);
 }
 
 void ServerPage::bulletHit(ServerEntity& bullet, Renderable& target)

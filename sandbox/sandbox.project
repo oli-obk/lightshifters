@@ -57,6 +57,7 @@
       <File Name="src/space_page.cpp"/>
       <File Name="src/space_page.h"/>
     </VirtualDirectory>
+    <File Name="src/optional.hpp"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
@@ -77,6 +78,7 @@
       <General OutputFile="" IntermediateDirectory="/home/oliver/Projects/lightshifters/sandbox/bin" Command="Sandbox" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[
+      
       
       
       
@@ -122,6 +124,7 @@
       <General OutputFile="" IntermediateDirectory="/home/oliver/Projects/lightshifters/sandbox/bin" Command="/home/oliver/Projects/lightshifters/sandbox/bin/Sandbox" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[
+      
       
       
       
