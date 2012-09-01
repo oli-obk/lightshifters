@@ -32,9 +32,10 @@ struct Vector {
 	double y;
 	double z;
 	#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)
-		#error you can use constructor delegation now
-	#endif
+	Vector():Vector(0, 0, 0) {}
+    #else
 	Vector():x(0),y(0),z(0) {}
+	#endif
 	Vector(double x, double y, double z):x(x),y(y),z(z) {}
 	SphericalCoordinate toSphericalCoordinate() const;
 	void normalize();
