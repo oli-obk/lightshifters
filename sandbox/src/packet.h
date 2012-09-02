@@ -78,7 +78,9 @@ public:
 		if (m_uCurReadPos + sizeof(T) > buflen()) {
 			throw std::logic_error("tried to read more bytes from a Packet than are available");
 		}
+		#define _SCL_SECURE_NO_WARNINGS
 		std::copy(data+m_uCurReadPos, data+m_uCurReadPos+sizeof(T), std::begin(un.data));
+		#undef _SCL_SECURE_NO_WARNINGS
 		m_uCurReadPos += sizeof(T);
 		return Gosu::littleToNative(un.value);
 	}

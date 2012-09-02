@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Project Name="sandbox_msvc" InternalType="Console">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00010001N0005Debug000000000000]]>
+    </Plugin>
+  </Plugins>
+  <Description/>
+  <Dependencies/>
+  <VirtualDirectory Name="src">
+    <File Name="../sandbox/src/bullet.cpp"/>
+    <File Name="../sandbox/src/client_page.cpp"/>
+    <File Name="../sandbox/src/config.cpp"/>
+    <File Name="../sandbox/src/default_page.cpp"/>
+    <File Name="../sandbox/src/main.cpp"/>
+    <File Name="../sandbox/src/Matrix.cpp"/>
+    <File Name="../sandbox/src/packet.cpp"/>
+    <File Name="../sandbox/src/page.cpp"/>
+    <File Name="../sandbox/src/page_manager.cpp"/>
+    <File Name="../sandbox/src/player.cpp"/>
+    <File Name="../sandbox/src/Quaternion.cpp"/>
+    <File Name="../sandbox/src/renderable.cpp"/>
+    <File Name="../sandbox/src/server_entity.cpp"/>
+    <File Name="../sandbox/src/server_page.cpp"/>
+    <File Name="../sandbox/src/space_page.cpp"/>
+    <File Name="../sandbox/src/spherical_coordinate.cpp"/>
+    <File Name="../sandbox/src/troll.cpp"/>
+    <File Name="../sandbox/src/Vector.cpp"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="include">
+    <File Name="../sandbox/src/bullet.h"/>
+    <File Name="../sandbox/src/client_page.h"/>
+    <File Name="../sandbox/src/config.h"/>
+    <File Name="../sandbox/src/default_page.h"/>
+    <File Name="../sandbox/src/Matrix.h"/>
+    <File Name="../sandbox/src/optional.hpp"/>
+    <File Name="../sandbox/src/packet.h"/>
+    <File Name="../sandbox/src/PacketType.h"/>
+    <File Name="../sandbox/src/page.h"/>
+    <File Name="../sandbox/src/page_manager.h"/>
+    <File Name="../sandbox/src/player.h"/>
+    <File Name="../sandbox/src/PlayerID.h"/>
+    <File Name="../sandbox/src/Quaternion.h"/>
+    <File Name="../sandbox/src/renderable.h"/>
+    <File Name="../sandbox/src/RenderableID.h"/>
+    <File Name="../sandbox/src/server_entity.h"/>
+    <File Name="../sandbox/src/server_page.h"/>
+    <File Name="../sandbox/src/space_page.h"/>
+    <File Name="../sandbox/src/spherical_coordinate.h"/>
+    <File Name="../sandbox/src/troll.h"/>
+    <File Name="../sandbox/src/Vector.h"/>
+  </VirtualDirectory>
+  <Settings Type="Executable">
+    <GlobalSettings>
+      <Compiler Options="" C_Options="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="">
+        <LibraryPath Value="."/>
+      </Linker>
+      <ResourceCompiler Options=""/>
+    </GlobalSettings>
+    <Configuration Name="Debug" CompilerType="VC++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="/Zi /MTd /RTC1 /EHsc" C_Options="/Zi" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+        <Preprocessor Value="WIN32"/>
+      </Compiler>
+      <Linker Options="/DEBUG" Required="yes">
+        <LibraryPath Value="lib"/>
+        <Library Value="GosuDebug.lib gdi32.lib user32.lib shell32.lib ole32.lib"/>
+      </Linker>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName).exe" IntermediateDirectory="Debug" Command="../../sandbox_msvc/Debug/sandbox_msvc.exe" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="../sandbox/bin" PauseExecWhenProcTerminates="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="no">
+        <RebuildCommand/>
+        <CleanCommand/>
+        <BuildCommand/>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName/>
+        <WorkingDirectory/>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="no">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+    <Configuration Name="Release" CompilerType="VC++" DebuggerType="GNU gdb debugger" Type="" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="" C_Options="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags=""/>
+      <Linker Options="" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName).exe" IntermediateDirectory="Release" Command="$(ProjectName).exe" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="no">
+        <RebuildCommand/>
+        <CleanCommand/>
+        <BuildCommand/>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName/>
+        <WorkingDirectory/>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="no">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+  </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
+</CodeLite_Project>
