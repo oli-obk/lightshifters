@@ -7,13 +7,27 @@
 #include <memory>
 #include "optional.hpp"
 
-struct ServerEntity;
+class ServerEntity;
 struct Renderable;
 
 #include <map>
 
 struct PlayerState {
+	#ifdef WIN32
+	private:
+	PlayerState();
+public:
+	// stupid msvc std pair wants a copy constructor, this works, too
+	PlayerState(PlayerState&& other)
+	{
+		Score = other.Score;
+		PlayerEntity = other.PlayerEntity;
+		UdpPort = other.UdpPort;
+		Socket = std::move(other.Socket);
+	}
+	#else
     PlayerState() = delete;
+	#endif
     PlayerState(std::unique_ptr<Gosu::CommSocket> sock):Socket(std::move(sock)) {}
     RenderableID PlayerEntity;
     int32_t Score;
@@ -49,8 +63,17 @@ private:
 
     void caughtTroll(RenderableID id);
 
+#ifdef WIN32
+    template<class T>
+    T& createEntity();
+    template<class T, class A>
+    T& createEntity(A a);
+    template<class T, class A, class B>
+    T& createEntity(A a, B b);
+#else
     template<class T, typename... Args>
     T& createEntity(Args... args);
+#endif
     void send(const Packet& p, PlayerState&);
 public:
     void sendPacketToAll(const Packet& p, PlayerID exclude = InvalidPlayerID);
@@ -66,7 +89,7 @@ public:
 
     void firePlasma(Vector position, Vector direction, PlayerID pid);
     void firePlasma(Vector direction);
-    optional<ServerEntity&> getClosestTo(Renderable& other, double maxdist);
+    optional<ServerEntity&> getClosestTo(Renderable& r, double maxdist);
 
 };
 

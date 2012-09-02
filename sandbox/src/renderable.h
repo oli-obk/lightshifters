@@ -63,8 +63,13 @@ protected:
 	static Gosu::Image& getImage(std::wstring name);
 private:
 	RenderableID m_myID;
+	#ifdef WIN32
+	Renderable(const Renderable& rhs);
+	Renderable& operator=(const Renderable& rhs);
+	#else
 	Renderable(const Renderable& rhs) = delete;
 	Renderable& operator=(const Renderable& rhs) = delete;
+	#endif
 	Vector m_Position;
 	double m_Scale;
 	Gosu::Color m_Color;

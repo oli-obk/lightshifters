@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CodeLite_Workspace Name="lightshifters" Database="./lightshifters.tags">
   <Project Name="sandbox" Path="sandbox/sandbox.project" Active="Yes"/>
+  <Project Name="sandbox_msvc" Path="sandbox_msvc/sandbox_msvc.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Project Name="sandbox" ConfigName="Debug"/>
+      <Project Name="sandbox_msvc" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="no">
+    <WorkspaceConfiguration Name="Release" Selected="yes">
       <Project Name="sandbox" ConfigName="Release"/>
+      <Project Name="sandbox_msvc" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

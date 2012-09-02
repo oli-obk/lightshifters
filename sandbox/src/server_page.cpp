@@ -6,12 +6,33 @@
 #include "troll.h"
 #include "RenderableID.h"
 #include <sstream>
+#include <random>
 
+#ifdef WIN32
+template<class T, class A>
+T& ServerPage::createEntity(A a)
+{
+    std::unique_ptr<T> ptr(new T(a));
+    T& r = *ptr;
+    std::cout << "creating " << r.getID() << " of type " << r.getType() << std::endl;
+    m_mEntities.insert(std::make_pair(r.getID(), std::move(ptr)));
+    Packet p;
+    p.write(PacketType::create_entities);
+    r.serialize(p);
+    sendPacketToAll(p);
+    return r;
+}
 
+template<class T>
+T& ServerPage::createEntity()
+{
+    std::unique_ptr<T> ptr(new T());
+#else
 template<class T, typename... Args>
 T& ServerPage::createEntity(Args... args)
 {
     std::unique_ptr<T> ptr(new T(args...));
+#endif
     T& r = *ptr;
     std::cout << "creating " << r.getID() << " of type " << r.getType() << std::endl;
     m_mEntities.insert(std::make_pair(r.getID(), std::move(ptr)));
@@ -127,8 +148,11 @@ void ServerPage::update()
         if (!it.second.Socket) continue;
         it.second.Socket->update();
     }
-    for(auto& it : m_mEntities) {
-        it.second->update();
+    for(auto it = m_mEntities.begin(); it != m_mEntities.end();)
+	{
+		// copy necessary to allow update to delete the entity
+		auto entit = it++;
+        entit->second->update();
     }
     if (!m_pPlayerRenderable) return;
 }
