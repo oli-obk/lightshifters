@@ -29,12 +29,21 @@ struct optional<T, typename std::enable_if<!std::is_reference<T>::value>::type> 
         new (&value) T(_v);
     }
     
+	#ifdef WIN32
+	template<class A>
+	optional(A a)
+	{
+		valid = true;
+        new(&value) T(a);
+	}
+	#else
     template<typename... Args>
     optional(Args... args)
     {
         valid = true;
         new(&value) T(args...);
     }
+	#endif
     
     // copy constructor
     optional(const optional& other)

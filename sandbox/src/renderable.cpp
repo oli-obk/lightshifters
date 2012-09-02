@@ -60,12 +60,12 @@ Renderable::~Renderable()
 
 double Renderable::screenX(const SphericalCoordinate& sc, double wdt)
 {
-	return Gosu::wrap(sc.azimuth/M_PI/2*wdt - wdt*0.75, 0.0, wdt);
+	return Gosu::wrap(sc.azimuth/Gosu::pi/2*wdt - wdt*0.75, 0.0, wdt);
 }
 
 double Renderable::screenY(const SphericalCoordinate& sc, double hgt)
 {
-	return Gosu::wrap(sc.inclination/M_PI/2*hgt*2, 0.0, hgt);
+	return Gosu::wrap(sc.inclination/Gosu::pi/2*hgt*2, 0.0, hgt);
 }
 
 void Renderable::draw(const Matrix& mat, double wdt, double hgt) const
