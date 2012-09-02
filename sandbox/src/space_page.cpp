@@ -192,5 +192,9 @@ void SpacePage::buttonUp(Gosu::Button btn)
 {
     if (btn == Gosu::msLeft) {
         this->firePlasma(m_rotPlayer*Vector::FORWARD);
+    } else if (btn == Gosu::kbF12) {
+        std::stringstream ss;
+        ss << "screenshot" << time(NULL) << ".png";
+        PageManager::Instance()->saveScreenShot(ss.str());
     }
 }

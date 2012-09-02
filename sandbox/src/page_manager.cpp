@@ -2,6 +2,8 @@
 #include "default_page.h"
 #include <cassert>
 #include "config.h"
+#include <Gosu/Bitmap.hpp>
+#include <Gosu/Graphics.hpp>
 
 PageManager* PageManager::ms_instance = 0;
 
@@ -87,4 +89,25 @@ void PageManager::update()
 {
 	assert(m_pPage);
 	m_pPage->update();
+}
+#include <GL/glut.h>
+#include <Gosu/Utility.hpp>
+void PageManager::saveScreenShot(std::string filename)
+{
+    graphics().flush();
+    std::vector<uint8_t> data(graphics().width()*graphics().height()*3, 0);
+    glReadPixels(0, 0, graphics().width(), graphics().height(), GL_RGB, GL_BYTE, data.data());
+    Gosu::Bitmap bmp(graphics().width(), graphics().height());
+    size_t line = graphics().height() -1;
+    size_t pos = 0;
+    for(size_t i = 0; i < data.size(); i+=3) {
+        Gosu::Color col(255, data[i], data[i+1], data[i+2]);
+        bmp.setPixel(pos, line, col);
+        pos++;
+        if (pos == graphics().width()) {
+            pos = 0;
+            line--;
+        }
+    }
+    Gosu::saveImageFile(bmp, Gosu::widen(filename));
 }
