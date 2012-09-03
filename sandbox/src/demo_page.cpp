@@ -44,7 +44,7 @@ void DemoPage::draw()
     double hgt = PageManager::Instance()->graphics().height();
     for(size_t i = 0; i < m_Positions.size(); i++) {
         rend.setImageName(L"sphere.png");
-        rend.setScale(0.01);
+        rend.setScale(0.1);
         rend.setColor(m_Colors[i]);
         rend.setPosition(m_Positions[i]);
         rend.draw(mat, wdt, hgt);

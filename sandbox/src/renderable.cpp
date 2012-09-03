@@ -236,7 +236,8 @@ Renderable::Renderable(Renderable && other)
 Renderable::Renderable(bool)
 {
 	m_Scale = 1.0;
-	m_Color = Gosu::Colors::white;
+	m_FixedSizeDistance = 1000.0;
+	setColor(Gosu::Colors::white);
 }
 
 PlayerID Renderable::getOwner() const
