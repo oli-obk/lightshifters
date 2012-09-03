@@ -2,7 +2,7 @@
 
 Player::Player(PlayerID id)
 {
-	setScale(0.01);
+	setScale(0.1);
 	setType("player");
     setOwner(id);
 }

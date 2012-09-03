@@ -94,8 +94,8 @@ void ClosestHud::draw(const Matrix& mat, double wdt, double hgt)
     if (!m_bValid) return;
     Renderable rend = Renderable::temporary();
     rend.setImageName(L"sphere.png");
-    rend.setScale(0.01);
-    rend.setMinScale(0.1);
+    rend.setScale(0.1);
+    rend.setFixedSizeDistance(100);
     Gosu::Color col = Gosu::Colors::green;
     rend.setColor(col);
     rend.setPosition(m_vecPos);

@@ -78,13 +78,13 @@ private:
 	PlayerID m_PlayerID;
 	void forceID(RenderableID id);
 	void deserialize(const Packet& p);
-	double m_MinScale;
+	double m_FixedSizeDistance;
 protected:
 	Renderable();
 	explicit Renderable(bool);
 public:
-	void setMinScale(double);
-	double getMinScale() const;
+	void setFixedSizeDistance(double);
+	double getFixedSizeDistance() const;
 	PlayerID getOwner() const;
 	void setOwner(PlayerID id);
 	Renderable(Renderable &&);

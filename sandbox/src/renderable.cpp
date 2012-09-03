@@ -20,6 +20,8 @@
   Oliver Schneider <mail@oli-obk.de>
 */
 
+#include "Quaternion.h"
+#include <Gosu/ImageData.hpp>
 #include <Gosu/Math.hpp>
 #include "renderable.h"
 #include "Vector.h"
@@ -48,7 +50,7 @@ Gosu::Image& Renderable::getImage(std::wstring name)
 Renderable::Renderable()
 {
 	m_Scale = 1.0;
-	m_MinScale = 0.0;
+	m_FixedSizeDistance = 1000.0;
 	setColor(Gosu::Colors::white);
 	m_myID = s_curID;
 	s_curID++;
@@ -60,7 +62,7 @@ Renderable::~Renderable()
 
 double Renderable::screenX(const SphericalCoordinate& sc, double wdt)
 {
-	return Gosu::wrap(sc.azimuth/Gosu::pi/2*wdt - wdt*0.75, 0.0, wdt);
+	return Gosu::wrap(sc.azimuth/Gosu::pi/2*wdt + wdt*0.25, 0.0, wdt);
 }
 
 double Renderable::screenY(const SphericalCoordinate& sc, double hgt)
@@ -72,20 +74,47 @@ void Renderable::draw(const Matrix& mat, double wdt, double hgt) const
 {
 	SphericalCoordinate sc = (mat * m_Position).toSphericalCoordinate();
 	if(sc.distance < 10.0) return; // "clipping"
-	double size = std::max(1.0, 1000.0/(sc.distance+1));
-	double x = screenX(sc, wdt);
-	double y = screenY(sc, hgt);
-	size *= m_Scale;
-	if (size < m_MinScale) {
-		size = m_MinScale;
-	}
 	Gosu::Image& im = getImage(getImageName());
-	im.drawRot(x, y, -sc.distance, 0, 0.5, 0.5, size, size, m_Color);
-	if (x + size*im.width()/2 > wdt) {
-		im.drawRot(x - wdt, y, -sc.distance, 0, 0.5, 0.5, size, size, m_Color);
-	} else if (x - size*im.width()/2 < 0) {
-		im.drawRot(x + wdt, y, -sc.distance, 0, 0.5, 0.5, size, size, m_Color);
-	}
+    Gosu::ImageData& imdata = im.getData();
+    Quaternion quat = Quaternion::fromAxisAngle(Vector::RIGHT, -sc.inclination-Gosu::pi/2)*Quaternion::fromAxisAngle(Vector::UP, -sc.azimuth-Gosu::pi/2);
+    Matrix mat2 = quat.inverted().toMatrix();
+    double dist = sc.distance;
+    if (dist > m_FixedSizeDistance) {
+        dist = m_FixedSizeDistance;
+    }
+    Vector vn = mat2 * Vector(-double(im.width())/2*m_Scale, -double(im.height())/2*m_Scale, -dist);
+    Vector vp = mat2 * Vector(double(im.width())/2*m_Scale, double(im.height())/2*m_Scale, -dist);
+    SphericalCoordinate n = vn.toSphericalCoordinate();
+    SphericalCoordinate p = vp.toSphericalCoordinate();
+    auto drawfun = [m_Color, dist, &imdata](double nx, double ny, double px, double py)
+        {
+        imdata.draw(nx, ny, m_Color,
+                    px, ny, m_Color,
+                    px, py, m_Color,
+                    nx, py, m_Color, -dist, Gosu::amDefault);
+        };
+    double nx = screenX(n, wdt);
+    double px = screenX(p, wdt);
+    double ny = screenY(n, hgt);
+    double py = screenY(p, hgt);
+    if (nx > px) {
+        if (ny > py) {
+            drawfun(nx - wdt, ny - hgt, px, py);
+            drawfun(nx - wdt, ny, px, py + hgt);
+            drawfun(nx, ny - hgt, px + wdt, py);
+            drawfun(nx, ny, px + wdt, py + hgt);
+        } else {
+            drawfun(nx - wdt, ny, px, py);
+            drawfun(nx, ny, px + wdt, py);
+        }
+    } else {
+        if (ny > py) {
+            drawfun(nx, ny - hgt, px, py);
+            drawfun(nx, ny, px, py + hgt);
+        } else {
+            drawfun(nx, ny, px, py);
+        }
+    }
 }
 
 Vector Renderable::getPosition() const
@@ -143,7 +172,7 @@ void Renderable::serialize(Packet& p) const
 	p.write(getPosition());
 	p.write(getScale());
 	p.write(getOwner());
-	p.write(getMinScale());
+	p.write(getFixedSizeDistance());
 }
 
 void Renderable::deserialize(const Packet& p)
@@ -154,7 +183,7 @@ void Renderable::deserialize(const Packet& p)
 	setPosition(p.read<Vector>());
 	setScale(p.read<double>());
 	setOwner(p.read<PlayerID>());
-	setMinScale(p.read<double>());
+	setFixedSizeDistance(p.read<double>());
 }
 
 void Renderable::setType(std::string type)
@@ -200,7 +229,7 @@ Renderable::Renderable(Renderable && other)
 	m_Type = other.m_Type;
 	m_myID = other.m_myID;
 	m_PlayerID = other.m_PlayerID;
-	m_MinScale = other.m_MinScale;
+	m_FixedSizeDistance = other.m_FixedSizeDistance;
 	other.m_myID = InvalidRenderableID;
 }
 
@@ -220,12 +249,12 @@ void Renderable::setOwner(PlayerID id)
 	m_PlayerID = id;
 }
 
-void Renderable::setMinScale(double scale)
+void Renderable::setFixedSizeDistance(double scale)
 {
-	m_MinScale = scale;
+	m_FixedSizeDistance = scale;
 }
 
-double Renderable::getMinScale() const
+double Renderable::getFixedSizeDistance() const
 {
-	return m_MinScale;
+	return m_FixedSizeDistance;
 }
