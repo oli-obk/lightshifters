@@ -8,10 +8,12 @@
 #include <type_traits>
 
 template<typename T, class Enable = void>
-struct optional;
+class optional;
 
 template<typename T>
-struct optional<T, typename std::enable_if<!std::is_reference<T>::value>::type> {
+class optional<T, typename std::enable_if<!std::is_reference<T>::value>::type>
+{
+private:
     bool valid;
 
     union {
@@ -19,6 +21,7 @@ struct optional<T, typename std::enable_if<!std::is_reference<T>::value>::type> 
         std::array<char, sizeof(T)> data;
     };
     
+public:
     // default constructor
     optional() : valid(false) {}
     
@@ -97,10 +100,13 @@ struct optional<T, typename std::enable_if<!std::is_reference<T>::value>::type> 
 };
 
 template<typename T3>
-struct optional<T3, typename std::enable_if<std::is_reference<T3>::value>::type > {
+class optional<T3, typename std::enable_if<std::is_reference<T3>::value>::type >
+{
+private:
     typedef typename std::remove_reference<T3>::type T;
     T* value;
-    
+
+public:
     // default constructor
     optional() : value(nullptr) {}
     
