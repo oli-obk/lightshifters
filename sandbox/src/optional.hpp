@@ -26,7 +26,7 @@ public:
     optional() : valid(false) {}
     
     // initializer
-    optional(const T& _v)
+    explicit optional(const T& _v)
     {
         valid = true;
         new (&value) T(_v);
@@ -34,14 +34,14 @@ public:
     
 	#ifdef WIN32
 	template<class A>
-	optional(A a)
+	explicit optional(A a)
 	{
 		valid = true;
         new(&value) T(a);
 	}
 	#else
     template<typename... Args>
-    optional(Args... args)
+    explicit optional(Args... args)
     {
         valid = true;
         new(&value) T(args...);
@@ -94,8 +94,35 @@ public:
 
     T& operator*()
     {
+        assert(valid);
         if (valid) return value;
         throw std::bad_exception();
+    }
+    
+    const T& operator*() const
+    {
+        assert(valid);
+        if (valid) return value;
+        throw std::bad_exception();
+    }
+    
+    T* operator->()
+    {
+        assert(valid);
+        if (valid) return &value;
+        throw std::bad_exception();
+    }
+    
+    const T* operator->() const
+    {
+        assert(valid);
+        if (valid) return &value;
+        throw std::bad_exception();
+    }
+    
+    void reset(T t)
+    {
+        *this = optional<T>(t);
     }
 };
 
@@ -111,7 +138,7 @@ public:
     optional() : value(nullptr) {}
     
     // initializer
-    optional(const T3 _v) : value(&_v) {}
+    explicit optional(const T3 _v) : value(&_v) {}
     
     // copy constructor
     optional(const optional& other)
@@ -152,8 +179,35 @@ public:
 
     T& operator*()
     {
+        assert(value);
         if (value) return *value;
         throw std::bad_exception();
+    }
+    
+    const T& operator*() const
+    {
+        assert(value);
+        if (value) return *value;
+        throw std::bad_exception();
+    }
+    
+    T* operator->()
+    {
+        assert(value);
+        if (value) return value;
+        throw std::bad_exception();
+    }
+    
+    const T* operator->() const
+    {
+        assert(value);
+        if (value) return value;
+        throw std::bad_exception();
+    }
+    
+    void reset(T3 t)
+    {
+        *this = optional<T3>(t);
     }
 };
 #endif // OPTIONAL_HPP
