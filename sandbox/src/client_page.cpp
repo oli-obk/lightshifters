@@ -7,7 +7,7 @@
 
 using namespace std::placeholders;
 
-Renderable& createEntity(ClientPage::EntityMap& list, const Packet& p)
+Renderable& ClientPage::createEntity(EntityMap& list, const Packet& p)
 {
     Renderable r(p);
     RenderableID id = r.getID();
@@ -28,7 +28,7 @@ ClientPage::ClientPage(std::string addr, Gosu::SocketPort port, Gosu::SocketPort
     Packet p;
     p.write(PacketType::udp_port_update);
     p.write(host_port);
-    sendPacket(p);
+    sendTcpPacket(p);
 }
 
 ClientPage::~ClientPage()
@@ -96,11 +96,11 @@ void ClientPage::onReceive(const void* data, std::size_t size)
 
 void ClientPage::PositionChanged(const Renderable& r)
 {
-    Packet p(false);
+    Packet p;
     p.write(PacketType::set_entity_position);
     p.write(r.getID());
     p.write(r.getPosition());
-    sendPacket(p);
+    sendUdpPacket(p);
 }
 
 optional<Renderable&> ClientPage::getEntity(RenderableID id)
@@ -120,12 +120,14 @@ void ClientPage::update()
 void ClientPage::draw()
 {
     SpacePage::draw();
-    for (auto& it: m_mEntities) {
+    for (auto& it: m_mEntities)
+    {
         render(it.second);
     }
     {
         double pos = 10;
-            for (auto& it: m_mScore) {
+        for (auto& it: m_mScore)
+        {
             std::wstringstream wss;
             if (it.first == m_pidMine) {
                 wss << L"You: ";
@@ -141,36 +143,41 @@ void ClientPage::draw()
 
 void ClientPage::firePlasma(Vector direction)
 {
-    Packet p(false);
+    Packet p;
     p.write(PacketType::fire_plasma);
     p.write(direction);
-    sendPacket(p);
+    sendUdpPacket(p);
 }
 
-void ClientPage::sendPacket(const Packet& p)
+void ClientPage::sendUdpPacket(const Packet& p)
 {
     if (p.buflen() == 0) {
         std::cout << "tried to send zero length data" << std::endl;
         return;
     }
-    if (p.sendByUdp()) {
-        if (p.buflen() > m_MessageSocket.maxMessageSize()) {
-            std::cout << "tried to send a packet by udp that surpasses maximum length of " << m_MessageSocket.maxMessageSize() << " bytes" << std::endl;
-            return;
-        }
-        m_MessageSocket.send(m_Connection.address(), m_Port, p.buf(), p.buflen());
-    } else {
-        m_Connection.send(p.buf(), p.buflen());
-        m_Connection.sendPendingData();
+    if (p.buflen() > m_MessageSocket.maxMessageSize()) {
+        std::cout << "tried to send a packet by udp that surpasses maximum length of " << m_MessageSocket.maxMessageSize() << " bytes" << std::endl;
+        return;
     }
+    m_MessageSocket.send(m_Connection.address(), m_Port, p.buf(), p.buflen());
+}
+
+void ClientPage::sendTcpPacket(const Packet& p)
+{
+    if (p.buflen() == 0) {
+        std::cout << "tried to send zero length data" << std::endl;
+        return;
+    }
+    m_Connection.send(p.buf(), p.buflen());
+    m_Connection.sendPendingData();
 }
 
 void ClientPage::caughtTroll(RenderableID id)
 {
-    Packet p(false);
+    Packet p;
     p.write(PacketType::catch_troll);
     p.write(id);
-    sendPacket(p);
+    sendUdpPacket(p);
 }
 
 void ClientPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, const void* data, std::size_t size)
@@ -198,8 +205,9 @@ void ClientPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, c
             r.setPosition(pos);
         }
         break;
-        default:
-            std::cout << "this packet type is unknown or not meant to be sent by udp" << std::endl;
+    default:
+        std::cout << "this packet type is unknown or not meant to be sent by udp" << std::endl;
         break;
     }
 }
+

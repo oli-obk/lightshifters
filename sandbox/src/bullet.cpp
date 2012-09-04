@@ -23,11 +23,11 @@ void Bullet::update()
         return;
     }
     setPosition(getPosition()+m_vecDirection);
-    Packet p(false);
+    Packet p;
     p.write(PacketType::set_entity_position);
     p.write(getID());
     p.write(getPosition());
-    page.sendPacketToAll(p);
+    page.sendUdpPacketToAll(p);
     auto found = page.getClosestTo(*this, 10);
     if (found) {
         Renderable& r = *found;

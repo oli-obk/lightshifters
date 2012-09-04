@@ -8,8 +8,9 @@
 
 class ClientPage : public SpacePage
 {
-public:
+private:
     typedef std::map<RenderableID, Renderable> EntityMap;
+    Renderable& createEntity(EntityMap& list, const Packet& p);
     Gosu::CommSocket m_Connection;
     Gosu::MessageSocket m_MessageSocket;
     EntityMap m_mEntities;
@@ -23,7 +24,8 @@ private:
     void onReceiveUdp(Gosu::SocketAddress, Gosu::SocketPort, const void*, std::size_t);
 
     void firePlasma(Vector direction);
-    void sendPacket(const Packet& p);
+    void sendTcpPacket(const Packet& p);
+    void sendUdpPacket(const Packet& p);
 public:
     ClientPage(std::string addr, Gosu::SocketPort port, Gosu::SocketPort host_port);
     ~ClientPage();

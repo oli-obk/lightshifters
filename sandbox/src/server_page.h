@@ -12,24 +12,25 @@ struct Renderable;
 
 #include <map>
 
+class Player;
+
 struct PlayerState {
-	#ifdef WIN32
-	private:
-	PlayerState();
+#ifdef WIN32
+private:
+    PlayerState();
 public:
-	// stupid msvc std pair wants a copy constructor, this works, too
-	PlayerState(PlayerState&& other)
-	{
-		Score = other.Score;
-		PlayerEntity = other.PlayerEntity;
-		UdpPort = other.UdpPort;
-		Socket = std::move(other.Socket);
-	}
-	#else
+    // stupid msvc std pair wants a copy constructor, this works, too
+    PlayerState(PlayerState&& other) {
+        Score = other.Score;
+        PlayerEntity = other.PlayerEntity;
+        UdpPort = other.UdpPort;
+        Socket = std::move(other.Socket);
+    }
+#else
     PlayerState() = delete;
-	#endif
+#endif
     PlayerState(std::unique_ptr<Gosu::CommSocket> sock):Socket(std::move(sock)) {}
-    RenderableID PlayerEntity;
+    optional<Player&> Entity;
     int32_t Score;
     uint16_t UdpPort;
     std::unique_ptr<Gosu::CommSocket> Socket;
@@ -48,7 +49,6 @@ private:
     typedef std::map<RenderableID, std::unique_ptr<ServerEntity> > EntityMap;
     EntityMap m_mEntities;
     PlayerID m_pidNext;
-    
     typedef std::map<PlayerID, PlayerState> PlayerMap;
     PlayerMap m_mPlayers;
 private:
@@ -62,7 +62,9 @@ private:
     void draw();
 
     void caughtTroll(RenderableID id);
-
+    
+    void sendUdpPacket(const Packet& p, PlayerState&);
+    void sendTcpPacket(const Packet& p, PlayerState&);
 #ifdef WIN32
     template<class T>
     T& createEntity();
@@ -74,10 +76,13 @@ private:
     template<class T, typename... Args>
     T& createEntity(Args... args);
 #endif
-    void send(const Packet& p, PlayerState&);
 public:
-    void sendPacketToAll(const Packet& p, PlayerID exclude = InvalidPlayerID);
-    void sendPacketTo(const Packet& p, PlayerID player);
+
+
+    void sendUdpPacketToAll(const Packet& p, PlayerID exclude = InvalidPlayerID);
+    void sendTcpPacketToAll(const Packet& p, PlayerID exclude = InvalidPlayerID);
+    void sendUdpPacketTo(const Packet& p, PlayerID player);
+    void sendTcpPacketTo(const Packet& p, PlayerID player);
     void bulletHit(ServerEntity& bullet, Renderable& target);
     ServerPage(uint16_t port);
     ~ServerPage();

@@ -53,6 +53,8 @@ struct Vector {
 	bool operator!=(const Vector& v) const;
 	bool operator==(const Vector& v) const;
 	Vector operator-() const;
+    bool iszero();
+    bool isnotzero();
 };
 
 #include <iostream>

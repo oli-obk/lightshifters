@@ -6,6 +6,7 @@
 #include <exception>
 #include <array>
 #include <type_traits>
+#include <cassert>
 
 template<typename T, class Enable = void>
 class optional;
@@ -32,22 +33,6 @@ public:
         new (&value) T(_v);
     }
     
-	#ifdef WIN32
-	template<class A>
-	explicit optional(A a)
-	{
-		valid = true;
-        new(&value) T(a);
-	}
-	#else
-    template<typename... Args>
-    explicit optional(Args... args)
-    {
-        valid = true;
-        new(&value) T(args...);
-    }
-	#endif
-    
     // copy constructor
     optional(const optional& other)
     {
@@ -58,9 +43,10 @@ public:
         else valid = false;
     }
     
-    optional& operator=(optional other)
+    optional& operator=(const optional& other)
     {
-        std::swap(*this, other);
+        valid = other.valid;
+        std::copy(std::begin(other.data), std::end(other.data), std::begin(data));
         return *this;
     }
     
@@ -73,13 +59,9 @@ public:
     {
         valid = false;
 	#endif
-        std::swap(*this, other);
-    }
-    
-    friend void swap(optional& first, optional& second)
-    {
-        std::swap(first.valid, second.valid);
-        std::swap(first.data, second.data);
+        valid = other.valid;
+        other.valid = false;
+        std::copy(std::begin(other.data), std::end(other.data), std::begin(data));
     }
 
     ~optional()
@@ -124,6 +106,11 @@ public:
     {
         *this = optional<T>(t);
     }
+    
+    void reset()
+    {
+        *this = optional<T>();
+    }
 };
 
 template<typename T3>
@@ -161,12 +148,7 @@ public:
     {
         value = nullptr;
 	#endif
-        std::swap(*this, other);
-    }
-    
-    friend void swap(optional& first, optional& second)
-    {
-        std::swap(first.value, second.value);
+        std::swap(value, other.value);
     }
 
     ~optional()
@@ -207,7 +189,12 @@ public:
     
     void reset(T3 t)
     {
-        *this = optional<T3>(t);
+        value = &t;
+    }
+    
+    void reset()
+    {
+        value = nullptr;
     }
 };
 #endif // OPTIONAL_HPP

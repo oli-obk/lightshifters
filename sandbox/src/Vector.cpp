@@ -118,3 +118,13 @@ SphericalCoordinate Vector::toSphericalCoordinate() const
 	double mag = magnitude();
 	return SphericalCoordinate(mag, atan2(-z, x), acos(y/mag));
 }
+
+bool Vector::iszero()
+{
+    return (x==0) && (y==0) && (z==0);
+}
+
+bool Vector::isnotzero()
+{
+    return (x!=0) || (y!=0) || (z!=0);
+}

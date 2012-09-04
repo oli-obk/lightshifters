@@ -35,16 +35,13 @@ private:
 	const size_t m_voidSize;
 	mutable size_t m_uCurReadPos;
 	mutable bool m_bReadInProgress;
-    bool m_bSendByUdp;
 public:
     // receive
 	Packet(const void* data, size_t size);
-    // send by tcp
-    Packet(bool tcp = true);
+    Packet();
 	~Packet();
 	const void* buf() const;
 	std::size_t buflen() const;
-    bool sendByUdp() const;
 	void beginRead() const;
 	void endRead() const;
 	size_t bytesLeftToRead() const;
