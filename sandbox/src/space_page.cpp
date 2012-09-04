@@ -22,7 +22,6 @@ SpacePage::SpacePage()
 	:m_rotPlayer(Quaternion::identity())
     ,m_matGlobalToLocal(Matrix::identity())
     ,m_Font(PageManager::Instance()->graphics(), Gosu::defaultFontName(), 20)
-    ,m_pPlayerRenderable(nullptr)
 {
     m_pidMine = InvalidPlayerID;
 	Gosu::Input& i = PageManager::Instance()->input();
@@ -45,9 +44,9 @@ SpacePage::~SpacePage()
 
 void SpacePage::render(const Renderable& r)
 {
-    if (m_pPlayerRenderable) {
+    if (m_PlayerRenderable) {
         if (r.getType() == "troll") {
-            m_Closest.check(r, m_pPlayerRenderable->getPosition());
+            m_Closest.check(r, m_PlayerRenderable->getPosition());
         }
     }
 	Gosu::Graphics& g = PageManager::Instance()->graphics();
@@ -139,7 +138,7 @@ void SpacePage::update()
 		i.setMousePosition(wdt/2, hgt/2);
 	}
     
-    if (!m_pPlayerRenderable) return;
+    if (!m_PlayerRenderable) return;
     
 	Vector dir(0, 0, 0);
 	if (i.down(m_kbForward)) {
@@ -163,7 +162,7 @@ void SpacePage::update()
 	}
 	if (dir.x != 0 || dir.y != 0 || dir.z != 0) {
 		dir.normalize();
-		m_pPlayerRenderable->setPosition(m_pPlayerRenderable->getPosition() + m_rotPlayer * dir * speed);
+		m_PlayerRenderable->setPosition(m_PlayerRenderable->getPosition() + m_rotPlayer * dir * speed);
         PlayerPositionChanged();
 	}
 }
@@ -176,17 +175,17 @@ bool SpacePage::needsCursor() const
 
 void SpacePage::PlayerPositionChanged()
 {
-    if (!m_pPlayerRenderable) return;
-    this->PositionChanged(*m_pPlayerRenderable);
+    if (!m_PlayerRenderable) return;
+    this->PositionChanged(*m_PlayerRenderable);
 }
 
 void SpacePage::refreshMatrix()
 {
-    if (!m_pPlayerRenderable) {
+    if (!m_PlayerRenderable) {
         m_matGlobalToLocal = m_rotPlayer.inverted().toMatrix();
         return;
     }
-	m_matGlobalToLocal = m_rotPlayer.inverted().toMatrix().translated(-m_pPlayerRenderable->getPosition());
+	m_matGlobalToLocal = m_rotPlayer.inverted().toMatrix().translated(-m_PlayerRenderable->getPosition());
 }
 
 void SpacePage::buttonUp(Gosu::Button btn)

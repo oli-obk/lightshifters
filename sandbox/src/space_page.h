@@ -74,7 +74,7 @@ private:
 protected:
 	Gosu::Font m_Font;
 	PlayerID m_pidMine;
-    Renderable* m_pPlayerRenderable;
+    optional<Renderable&> m_PlayerRenderable;
     virtual void PositionChanged(const Renderable&) = 0;
     virtual optional<Renderable&> getEntity(RenderableID id) = 0;
     void render(const Renderable&);

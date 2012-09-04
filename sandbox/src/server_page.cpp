@@ -68,7 +68,7 @@ ServerPage::ServerPage(uint16_t port)
     player.PlayerEntity = r.getID();
     player.Score = 0;
     m_mPlayers.insert(std::make_pair(m_pidMine, std::move(player)));
-    m_pPlayerRenderable = &r;
+    m_PlayerRenderable.reset(r);
 }
 
 void ServerPage::onConnection(Gosu::Socket& sock)
@@ -154,7 +154,6 @@ void ServerPage::update()
 		auto entit = it++;
         entit->second->update();
     }
-    if (!m_pPlayerRenderable) return;
 }
 
 void ServerPage::draw()
@@ -362,7 +361,7 @@ void ServerPage::eraseEntity(RenderableID id)
 
 void ServerPage::firePlasma(Vector direction)
 {
-    firePlasma(m_pPlayerRenderable->getPosition(), direction, m_pidMine);
+    firePlasma(m_PlayerRenderable->getPosition(), direction, m_pidMine);
 }
 
 void ServerPage::firePlasma(Vector pos, Vector direction, PlayerID pid)

@@ -51,10 +51,10 @@ void ClientPage::onReceive(const void* data, std::size_t size)
         while (p.bytesLeftToRead()) {
             Renderable& r = createEntity(m_mEntities, p);
             std::cout << "received " << r.getID() << " of type " << r.getType() << std::endl;
-            if (!m_pPlayerRenderable) {
+            if (!m_PlayerRenderable) {
                 if (r.getType() == "player") {
                     if (r.getOwner() == m_pidMine) {
-                        m_pPlayerRenderable = &r;
+                        m_PlayerRenderable.reset(r);
                     }
                 }
             }
