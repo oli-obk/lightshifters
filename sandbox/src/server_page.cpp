@@ -124,7 +124,7 @@ void ServerPage::generateSpace()
     std::uniform_real_distribution<double> posgen(-1000, 1000);
     std::uniform_int_distribution<uint32_t> tempgen(0, 60000);
     std::mt19937 engine; // Mersenne twister MT19937
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10; i++) {
         Vector pos(posgen(engine), posgen(engine), posgen(engine));
         uint32_t temp = tempgen(engine);
         Troll& troll = createEntity<Troll>();

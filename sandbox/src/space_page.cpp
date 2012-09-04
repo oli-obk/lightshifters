@@ -94,8 +94,8 @@ void ClosestHud::draw(const Matrix& mat, double wdt, double hgt)
     if (!m_bValid) return;
     Renderable rend = Renderable::temporary();
     rend.setImageName(L"sphere.png");
-    rend.setScale(0.01);
-    rend.setMinScale(0.1);
+    rend.setScale(0.1);
+    rend.setFixedSizeDistance(100);
     Gosu::Color col = Gosu::Colors::green;
     rend.setColor(col);
     rend.setPosition(m_vecPos);
@@ -192,5 +192,9 @@ void SpacePage::buttonUp(Gosu::Button btn)
 {
     if (btn == Gosu::msLeft) {
         this->firePlasma(m_rotPlayer*Vector::FORWARD);
+    } else if (btn == Gosu::kbF12) {
+        std::stringstream ss;
+        ss << "screenshot" << time(NULL) << ".png";
+        PageManager::Instance()->saveScreenShot(ss.str());
     }
 }
