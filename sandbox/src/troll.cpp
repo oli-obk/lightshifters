@@ -2,7 +2,7 @@
 
 Troll::Troll()
 {
-	setScale(0.005);
+	setScale(0.05);
 	setType("troll");
 }
 

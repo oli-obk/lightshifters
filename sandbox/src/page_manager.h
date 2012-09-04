@@ -18,6 +18,8 @@ private:
 public:
 	static PageManager* Instance();
 	static void Release();
+    
+    void saveScreenShot(std::string filename);
 
 private:
 	PageManager();
