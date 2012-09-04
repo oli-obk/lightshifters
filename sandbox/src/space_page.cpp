@@ -22,6 +22,7 @@ SpacePage::SpacePage()
 	:m_rotPlayer(Quaternion::identity())
     ,m_matGlobalToLocal(Matrix::identity())
     ,m_Font(PageManager::Instance()->graphics(), Gosu::defaultFontName(), 20)
+    ,m_pPlayerRenderable(nullptr)
 {
     m_pidMine = InvalidPlayerID;
 	Gosu::Input& i = PageManager::Instance()->input();
