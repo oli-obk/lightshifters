@@ -173,8 +173,14 @@ void ClientPage::caughtTroll(RenderableID id)
     sendPacket(p);
 }
 
-void ClientPage::onReceiveUdp(Gosu::SocketAddress, Gosu::SocketPort, const void* data, std::size_t size)
+void ClientPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, const void* data, std::size_t size)
 {
+    if (addr != m_Connection.address() || port != m_Connection.port()) {
+        std::cout << "some hotshot sent us a udp packet but is not in our game" << std::endl;
+        std::cout << "source: " << Gosu::addressToString(addr) << ":" << port << std::endl;
+        std::cout << "content: " << std::string(static_cast<const char*>(data), static_cast<const char*>(data)+size) << std::endl;
+        return;
+    }
     Packet p(data, size);
     p.beginRead();
     PacketType pt = p.read<PacketType>();

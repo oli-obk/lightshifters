@@ -212,8 +212,9 @@ void ServerPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, c
         break;
     }
     if (player_id == InvalidPlayerID) {
-        std::cout << "some hotshot sent us a udp packet but is not in our game: ";
-        std::cout << Gosu::addressToString(addr) << ":" << port << std::endl;
+        std::cout << "some hotshot sent us a udp packet but is not in our game" << std::endl;
+        std::cout << "source: " << Gosu::addressToString(addr) << ":" << port << std::endl;
+        std::cout << "content: " << std::string(static_cast<const char*>(data), static_cast<const char*>(data)+size) << std::endl;
         return;
     }
     PlayerState& player = *pPlayer;
