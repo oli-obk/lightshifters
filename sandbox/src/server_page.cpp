@@ -43,7 +43,6 @@ T& ServerPage::createEntity(Args... args)
 void ServerPage::addEntity(std::unique_ptr<ServerEntity> ptr)
 {
     ServerEntity& r = *ptr;
-    std::cout << "adding " << r.getID() << " of type " << r.getType() << std::endl;
     m_mEntities.insert(std::make_pair(r.getID(), std::move(ptr)));
     Packet p;
     p.write(PacketType::create_entities);
@@ -449,7 +448,6 @@ void ServerPage::eraseEntity(EntityMap::iterator it)
 {
     assert(it != m_mEntities.end());
     RenderableID id = it->first;
-    std::cout << "erasing " << id << std::endl;
     m_mEntities.erase(it);
     Packet p;
     p.write(PacketType::delete_entities);
