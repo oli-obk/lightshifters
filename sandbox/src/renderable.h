@@ -83,6 +83,7 @@ protected:
 	Renderable();
 	explicit Renderable(bool);
 public:
+    double getRadius() const;
 	void setFixedSizeDistance(double);
 	double getFixedSizeDistance() const;
 	PlayerID getOwner() const;

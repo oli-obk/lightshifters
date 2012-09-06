@@ -259,3 +259,9 @@ double Renderable::getFixedSizeDistance() const
 {
 	return m_FixedSizeDistance;
 }
+
+double Renderable::getRadius() const
+{
+    Gosu::Image& i = getImage(getImageName());
+    return double(std::min(i.width(), i.height()))*0.5*m_Scale;
+}

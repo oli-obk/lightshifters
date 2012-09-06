@@ -19,6 +19,6 @@ void Player::fire(Vector direction)
     ServerPage& page = ServerPage::getInstance();
     std::unique_ptr<Bullet> ent(new Bullet(direction));
     ent->setOwner(getOwner());
-    ent->setPosition(getPosition() + direction*10);
+    ent->setPosition(getPosition());
     page.addEntity(std::move(ent));
 }

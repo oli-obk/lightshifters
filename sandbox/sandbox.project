@@ -25,6 +25,8 @@
       <File Name="src/Vector.h"/>
       <File Name="src/spherical_coordinate.cpp"/>
       <File Name="src/spherical_coordinate.h"/>
+      <File Name="src/line.hpp"/>
+      <File Name="src/line.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="Renderable">
       <File Name="src/bullet.cpp"/>
@@ -90,6 +92,7 @@
       
       
       
+      
       ]]>
       </Environment>
       <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
@@ -127,6 +130,7 @@
       <General OutputFile="" IntermediateDirectory="/home/oliver/Projects/lightshifters/sandbox/bin" Command="/home/oliver/Projects/lightshifters/sandbox/bin/Sandbox" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[
+      
       
       
       

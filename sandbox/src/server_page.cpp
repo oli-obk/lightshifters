@@ -1,3 +1,4 @@
+#include "line.hpp"
 #include "bullet.h"
 #include "PacketType.h"
 #include "server_page.h"
@@ -393,12 +394,22 @@ optional<ServerEntity&> ServerPage::getClosestTo(Renderable& r, double maxdist)
     return optional<ServerEntity&>(*m_mEntities[closest.m_ID]);
 }
 
+
+void ServerPage::intersect(Line& line, std::function<bool(ServerEntity&)> callback)
+{
+    for(auto& it: m_mEntities)
+    {
+        ServerEntity& r = *it.second;
+        double distsq = line.segmentDistanceSquared(r.getPosition());
+        if (distsq > r.getRadius()*r.getRadius()) continue;
+        if(callback(r)) continue;
+        return;
+    }
+}
+
 void ServerPage::bulletHit(ServerEntity& bullet, Renderable& target)
 {
-    // only hit players
     if (target.getType() == "player") {
-        // do not self-hit
-        if (target.getOwner() == bullet.getOwner()) return;
         auto looser = m_mPlayers.find(target.getOwner());
         auto winner = m_mPlayers.find(bullet.getOwner());
         if (looser == m_mPlayers.end()) {

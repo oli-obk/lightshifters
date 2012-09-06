@@ -9,6 +9,7 @@
 
 class ServerEntity;
 struct Renderable;
+class Line;
 
 #include <map>
 
@@ -93,6 +94,7 @@ public:
     void firePlasma(Vector direction, Player& p);
     void firePlasma(Vector direction);
     optional<ServerEntity&> getClosestTo(Renderable& r, double maxdist);
+    void intersect(Line& line, std::function<bool(ServerEntity&)> callback);
 
 };
 
