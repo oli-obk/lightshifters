@@ -92,7 +92,7 @@ public:
     void eraseEntity(RenderableID id);
     void eraseEntity(EntityMap::iterator id);
 
-    void firePlasma(Vector position, Vector direction, PlayerID pid);
+    void firePlasma(Vector direction, Player& p);
     void firePlasma(Vector direction);
     optional<ServerEntity&> getClosestTo(Renderable& r, double maxdist);
 

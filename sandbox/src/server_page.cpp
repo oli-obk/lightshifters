@@ -271,7 +271,7 @@ void ServerPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, c
     {
         Vector dir = p.read<Vector>();
         dir.normalize();
-        firePlasma(player.Entity->getPosition(), dir, player_id);
+        firePlasma(dir, *player.Entity);
     }
     break;
     default:
@@ -389,14 +389,14 @@ void ServerPage::eraseEntity(RenderableID id)
 
 void ServerPage::firePlasma(Vector direction)
 {
-    firePlasma(m_PlayerRenderable->getPosition(), direction, m_pidMine);
+    auto it = m_mPlayers.find(m_pidMine);
+    assert(it != m_mPlayers.end());
+    firePlasma(direction, *(it->second.Entity));
 }
 
-void ServerPage::firePlasma(Vector pos, Vector direction, PlayerID pid)
+void ServerPage::firePlasma(Vector direction, Player& player)
 {
-    auto it = m_mPlayers.find(pid);
-    assert(it != m_mPlayers.end());
-    it->second.Entity->fire(direction);
+    player.fire(direction);
 }
 
 void ServerPage::caughtTroll(RenderableID id)
