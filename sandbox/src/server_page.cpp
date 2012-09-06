@@ -246,27 +246,6 @@ void ServerPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, c
             sendUdpPacketToAll(p, player_id);
         }
         break;
-    case PacketType::catch_troll: {
-        RenderableID id = p.read<RenderableID>();
-        auto playerit = m_mPlayers.find(player_id);
-        assert(playerit != m_mPlayers.end());
-
-        Renderable& playerentity = *(player.Entity);
-        auto it = m_mEntities.find(id);
-        if (it == m_mEntities.end()) {
-            std::cout << "tried to catch not existing troll" << std::endl;
-            break;
-        }
-        if ((playerentity.getPosition() - it->second->getPosition()).magnitudeSquared() > 10*10) break;
-        eraseEntity(id);
-        player.Score++;
-        Packet p2;
-        p2.write(PacketType::scoreboard);
-        p2.write(player_id);
-        p2.write(player.Score);
-        sendTcpPacketToAll(p2);
-    }
-    break;
     case PacketType::fire_plasma:
     {
         Vector dir = p.read<Vector>();
@@ -399,14 +378,6 @@ void ServerPage::firePlasma(Vector direction, Player& player)
     player.fire(direction);
 }
 
-void ServerPage::caughtTroll(RenderableID id)
-{
-    eraseEntity(id);
-    auto it = m_mPlayers.find(m_pidMine);
-    assert(it != m_mPlayers.end());
-    it->second.Score++;
-}
-
 optional<ServerEntity&> ServerPage::getClosestTo(Renderable& r, double maxdist)
 {
     double maxsq = maxdist*maxdist;
@@ -425,29 +396,41 @@ optional<ServerEntity&> ServerPage::getClosestTo(Renderable& r, double maxdist)
 void ServerPage::bulletHit(ServerEntity& bullet, Renderable& target)
 {
     // only hit players
-    if (target.getType() != "player") return;
-    // do not self-hit
-    if (target.getOwner() == bullet.getOwner()) return;
-    auto looser = m_mPlayers.find(target.getOwner());
-    auto winner = m_mPlayers.find(bullet.getOwner());
-    if (looser == m_mPlayers.end()) {
-        std::cout << "bullet hit nonexisting player" << std::endl;
-        return;
+    if (target.getType() == "player") {
+        // do not self-hit
+        if (target.getOwner() == bullet.getOwner()) return;
+        auto looser = m_mPlayers.find(target.getOwner());
+        auto winner = m_mPlayers.find(bullet.getOwner());
+        if (looser == m_mPlayers.end()) {
+            std::cout << "bullet hit nonexisting player" << std::endl;
+            return;
+        }
+        if (winner == m_mPlayers.end()) {
+            std::cout << "bullet of nonexisting player hit existing player" << std::endl;
+            return;
+        }
+        std::cout << winner->first << "'s bullet hit " << looser->first << std::endl;
+        looser->second.Score--;
+        winner->second.Score++;
+        Packet p2;
+        p2.write(PacketType::scoreboard);
+        p2.write(looser->first);
+        p2.write(looser->second.Score);
+        p2.write(winner->first);
+        p2.write(winner->second.Score);
+        sendTcpPacketToAll(p2);
+    } else if (target.getType() == "troll") {
+        eraseEntity(target.getID());
+        auto it = m_mPlayers.find(bullet.getOwner());
+        assert(it != m_mPlayers.end());
+        PlayerState& state = it->second;
+        state.Score++;
+        Packet p2;
+        p2.write(PacketType::scoreboard);
+        p2.write(bullet.getOwner());
+        p2.write(state.Score);
+        sendTcpPacketToAll(p2);
     }
-    if (winner == m_mPlayers.end()) {
-        std::cout << "bullet of nonexisting player hit existing player" << std::endl;
-        return;
-    }
-    std::cout << winner->first << "'s bullet hit " << looser->first << std::endl;
-    looser->second.Score--;
-    winner->second.Score++;
-    Packet p2;
-    p2.write(PacketType::scoreboard);
-    p2.write(looser->first);
-    p2.write(looser->second.Score);
-    p2.write(winner->first);
-    p2.write(winner->second.Score);
-    sendTcpPacketToAll(p2);
     eraseEntity(bullet.getID());
 }
 

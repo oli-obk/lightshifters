@@ -172,14 +172,6 @@ void ClientPage::sendTcpPacket(const Packet& p)
     m_Connection.sendPendingData();
 }
 
-void ClientPage::caughtTroll(RenderableID id)
-{
-    Packet p;
-    p.write(PacketType::catch_troll);
-    p.write(id);
-    sendUdpPacket(p);
-}
-
 void ClientPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, const void* data, std::size_t size)
 {
     if (addr != m_Connection.address() || port != m_Port) {

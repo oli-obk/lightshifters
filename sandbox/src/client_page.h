@@ -33,7 +33,6 @@ public:
     optional<Renderable&> getEntity(RenderableID id);
     void update();
     void draw();
-    void caughtTroll(RenderableID id);
 
 };
 

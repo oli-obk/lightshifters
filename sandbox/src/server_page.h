@@ -60,8 +60,6 @@ private:
     void onConnection(Gosu::Socket& sock);
     void update();
     void draw();
-
-    void caughtTroll(RenderableID id);
     
     void sendUdpPacket(const Packet& p, PlayerState&);
     void sendTcpPacket(const Packet& p, PlayerState&);

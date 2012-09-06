@@ -85,7 +85,6 @@ public:
 	bool needsCursor() const;
     void buttonUp(Gosu::Button btn);
     virtual void firePlasma(Vector direction) = 0;
-    virtual void caughtTroll(RenderableID id) = 0;
 
 	virtual void draw();
 

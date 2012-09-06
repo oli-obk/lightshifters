@@ -110,9 +110,6 @@ void SpacePage::rotateDegrees(Vector axis, double angle)
 
 void SpacePage::update()
 {
-    if (m_Closest.m_bValid && m_Closest.m_dDistSquared < 10*10) {
-        this->caughtTroll(m_Closest.m_ID);
-    }
 	Gosu::Input& i = PageManager::Instance()->input();
 
 	if (i.down(m_kbSpinLeft)) {
