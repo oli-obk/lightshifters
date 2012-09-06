@@ -77,7 +77,7 @@ private:
     T& createEntity(Args... args);
 #endif
 public:
-
+    void addEntity(std::unique_ptr<ServerEntity> ent);
 
     void sendUdpPacketToAll(const Packet& p, PlayerID exclude = InvalidPlayerID);
     void sendTcpPacketToAll(const Packet& p, PlayerID exclude = InvalidPlayerID);

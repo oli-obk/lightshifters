@@ -10,6 +10,7 @@ class Player : public ServerEntity {
 public:
 	Player(PlayerID);
 	~Player();
+    void fire(Vector direction);
 };
 
 #endif // PLAYER_H

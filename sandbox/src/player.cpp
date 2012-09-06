@@ -1,4 +1,6 @@
 #include "player.h"
+#include "server_page.h"
+#include "bullet.h"
 
 Player::Player(PlayerID id)
 {
@@ -9,4 +11,14 @@ Player::Player(PlayerID id)
 
 Player::~Player()
 {
+}
+
+void Player::fire(Vector direction)
+{
+    direction.normalize();
+    ServerPage& page = ServerPage::getInstance();
+    std::unique_ptr<Bullet> ent(new Bullet(direction));
+    ent->setOwner(getOwner());
+    ent->setPosition(getPosition() + direction*10);
+    page.addEntity(std::move(ent));
 }

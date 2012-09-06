@@ -35,13 +35,19 @@ T& ServerPage::createEntity(Args... args)
     std::unique_ptr<T> ptr(new T(args...));
 #endif
     T& r = *ptr;
-    std::cout << "creating " << r.getID() << " of type " << r.getType() << std::endl;
+    addEntity(std::move(ptr));
+    return r;
+}
+
+void ServerPage::addEntity(std::unique_ptr<ServerEntity> ptr)
+{
+    ServerEntity& r = *ptr;
+    std::cout << "adding " << r.getID() << " of type " << r.getType() << std::endl;
     m_mEntities.insert(std::make_pair(r.getID(), std::move(ptr)));
     Packet p;
     p.write(PacketType::create_entities);
     r.serialize(p);
     sendTcpPacketToAll(p);
-    return r;
 }
 
 ServerPage* ServerPage::s_pInstance = nullptr;
@@ -388,10 +394,9 @@ void ServerPage::firePlasma(Vector direction)
 
 void ServerPage::firePlasma(Vector pos, Vector direction, PlayerID pid)
 {
-    Bullet& bullet = createEntity<Bullet>(direction);
-    std::cout << pid << " fired a bullet" << std::endl;
-    bullet.setPosition(pos);
-    bullet.setOwner(pid);
+    auto it = m_mPlayers.find(pid);
+    assert(it != m_mPlayers.end());
+    it->second.Entity->fire(direction);
 }
 
 void ServerPage::caughtTroll(RenderableID id)
