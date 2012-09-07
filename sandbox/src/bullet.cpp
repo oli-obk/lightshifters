@@ -4,8 +4,16 @@
 #include "bullet.h"
 #include "line.hpp"
 
+#include <Gosu/Audio.hpp>
+#include "optional.hpp"
+
 Bullet::Bullet(Vector direction)
 {
+    static optional<Gosu::Sample> s_Sample;
+    if (!s_Sample) {
+        s_Sample.reset(Gosu::Sample(L"sfx/phaser1.wav"));
+    }
+    s_Sample->play();
     direction.normalize();
     direction *= 50;
     m_vecDirection = direction;

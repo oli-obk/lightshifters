@@ -1,3 +1,4 @@
+#include <Gosu/Audio.hpp>
 #include "line.hpp"
 #include "bullet.h"
 #include "PacketType.h"
@@ -440,6 +441,17 @@ void ServerPage::bulletHit(ServerEntity& bullet, Renderable& target)
         p2.write(bullet.getOwner());
         p2.write(state.Score);
         sendTcpPacketToAll(p2);
+        if (bullet.getOwner() == m_pidMine) {
+            static optional<Gosu::Sample> s_Sample;
+            if (!s_Sample) {
+                s_Sample.reset(Gosu::Sample(L"sfx/catchtroll.wav"));
+            }
+            s_Sample->play();
+        } else {
+            Packet p;
+            p.write(PacketType::caught_troll);
+            sendUdpPacket(p, state);
+        }
     }
     eraseEntity(bullet.getID());
 }

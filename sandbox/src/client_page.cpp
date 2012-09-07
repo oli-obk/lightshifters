@@ -1,3 +1,4 @@
+#include <Gosu/Audio.hpp>
 #include <Gosu/Utility.hpp>
 #include "PacketType.h"
 #include "packet.h"
@@ -196,6 +197,15 @@ void ClientPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, c
             Renderable& r = it->second;
             r.setPosition(pos);
         }
+        break;
+    case PacketType::caught_troll:
+    {
+        static optional<Gosu::Sample> s_Sample;
+        if (!s_Sample) {
+            s_Sample.reset(Gosu::Sample(L"sfx/catchtroll.wav"));
+        }
+        s_Sample->play();
+    }
         break;
     default:
         std::cout << "this packet type is unknown or not meant to be sent by udp" << std::endl;
