@@ -22,6 +22,13 @@ private:
         std::array<char, sizeof(T)> data;
     };
     
+    void destruct_if_valid()
+    {
+        if (valid) {
+            value.~T();
+        }
+    }
+    
 public:
     // default constructor
     optional() : valid(false) {}
@@ -36,38 +43,31 @@ public:
     // copy constructor
     optional(const optional& other)
     {
-        if (other.valid) {
-            valid = true;
+        valid = other.valid;
+        if (valid) {
             new (&value) T(other.value);
         }
-        else valid = false;
     }
     
     optional& operator=(const optional& other)
     {
+        destruct_if_valid();
         valid = other.valid;
-        std::copy(std::begin(other.data), std::end(other.data), std::begin(data));
+        new (&value) T(other.value);
         return *this;
     }
     
     // move constructor
     optional(optional&& other)
-	#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)
-	:optional()
     {
-    #else
-    {
-        valid = false;
-	#endif
         valid = other.valid;
         other.valid = false;
-        std::copy(std::begin(other.data), std::end(other.data), std::begin(data));
+        value = std::move(other);
     }
 
     ~optional()
     {
-        if (valid)
-        value.~T();
+        destruct_if_valid();
     }
 
     bool operator!() const { return !valid; }
@@ -102,14 +102,17 @@ public:
         throw std::bad_exception();
     }
     
-    void reset(T t)
+    void reset(const T& t)
     {
-        *this = optional<T>(t);
+        destruct_if_valid();
+        valid = true;
+        value = t;
     }
     
     void reset()
     {
-        *this = optional<T>();
+        destruct_if_valid();
+        valid = false;
     }
 };
 
