@@ -111,3 +111,20 @@ void PageManager::saveScreenShot(std::string filename)
     }
     Gosu::saveImageFile(bmp, Gosu::widen(filename));
 }
+
+
+std::unique_ptr<Page> PageManager::returnToPrevious()
+{
+    std::swap(m_pPage, m_pLast);
+    if (!m_pPage) {
+        m_pPage.reset(new DefaultPage());
+    }
+    return std::move(m_pLast);
+}
+
+std::unique_ptr<Page> PageManager::swap(std::unique_ptr<Page> next)
+{
+    m_pLast = std::move(m_pPage);
+    m_pPage = std::move(next);
+    return std::move(m_pLast);
+}

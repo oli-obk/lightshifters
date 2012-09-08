@@ -26,6 +26,8 @@ private:
 	~PageManager();
 
 public:
+    std::unique_ptr<Page> swap(std::unique_ptr<Page>);
+    std::unique_ptr<Page> returnToPrevious();
 #ifndef WIN32
 	template<typename T, typename... Args> void load(Args... args);
     template<typename T, typename... Args> std::unique_ptr<Page> swap(Args... args);
