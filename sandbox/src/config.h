@@ -23,6 +23,7 @@ public:
 	void loadArgs(int argc, char* argv[]);
 	void setFile(std::string filename);
 	template<typename T> T get(std::string key, T def);
+    template<typename T> void set(std::string key, T value);
 
 private:
 	void parse(std::string, bool permanent);
@@ -65,6 +66,18 @@ template<typename T> inline T Config::get(std::string key, T def)
 	ss2 << def;
 	std::cerr << "Invalid value for \"" << key << "\": " << value << " ... using default: " << ss2.str() << std::endl;
 	return def;
+}
+
+template<> inline void Config::set(std::string key, Gosu::Button def)
+{
+    set(key, def.id());
+}
+
+template<typename T> inline void Config::set(std::string key, T value)
+{
+    std::stringstream ss;
+    ss << value;
+    m_mPermanent[key] = ss.str();
 }
 
 #endif // CONFIG_H
