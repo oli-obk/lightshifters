@@ -65,7 +65,7 @@ private:
 	void setupDirs();
 	void rotateDegrees(Vector axis, double angle);
 	Gosu::Button m_kbForward, m_kbBackward, m_kbStrafeRight, m_kbStrafeLeft;
-	Gosu::Button m_kbStrafeUp, m_kbStrafeDown, m_kbSpinLeft, m_kbSpinRight;
+	Gosu::Button m_kbStrafeUp, m_kbStrafeDown, m_kbSpinLeft, m_kbSpinRight, m_kbTurbo;
 	bool m_bInvertMouse;
     Matrix m_matGlobalToLocal;
     ClosestHud m_Closest;

@@ -36,6 +36,7 @@ SpacePage::SpacePage()
 	m_kbStrafeDown = config.get<Gosu::Button>("keyStrafeDown", Gosu::kbF);
 	m_kbSpinLeft = config.get<Gosu::Button>("keySpinLeft", Gosu::kbQ);
 	m_kbSpinRight = config.get<Gosu::Button>("keySpinRight", Gosu::kbE);
+	m_kbTurbo = config.get<Gosu::Button>("keyTurbo", Gosu::kbLeftShift);
 }
 
 SpacePage::~SpacePage()
@@ -154,7 +155,7 @@ void SpacePage::update()
 		dir -= Vector::UP;
 	}
 	double speed = 1.0;
-	if (i.down(Gosu::kbLeftShift)) {
+	if (i.down(m_kbTurbo)) {
 		speed = 5.0;
 	}
 	if (dir.x != 0 || dir.y != 0 || dir.z != 0) {
