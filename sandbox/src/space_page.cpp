@@ -114,9 +114,9 @@ void SpacePage::update()
 	Gosu::Input& i = PageManager::Instance()->input();
 
 	if (i.down(m_kbSpinLeft)) {
-		rotateDegrees(Vector::FORWARD, -1);
-	} else if (i.down(m_kbSpinRight)) {
 		rotateDegrees(Vector::FORWARD, 1);
+	} else if (i.down(m_kbSpinRight)) {
+		rotateDegrees(Vector::FORWARD, -1);
 	}
 	double wdt = PageManager::Instance()->graphics().width();
 	double hgt = PageManager::Instance()->graphics().height();
