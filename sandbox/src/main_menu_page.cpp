@@ -1,3 +1,4 @@
+#include "keybindings_page.hpp"
 #include "client_page.h"
 #include "server_page.h"
 #include "config.h"
@@ -32,6 +33,8 @@ MainMenuPage::MainMenuPage()
             std::cout << "Could not start server: " << e.what() << std::endl;
         }
         });
+    m_Entries.push_back(L"Rebind keys");
+    m_Functions.push_back([](){ PageManager::Instance()->load<KeybindingsPage>(); });
     m_Entries.push_back(L"Exit");
     m_Functions.push_back([](){ PageManager::Instance()->close(); });
 }
