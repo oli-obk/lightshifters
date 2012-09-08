@@ -60,6 +60,8 @@
       <File Name="src/space_page.h"/>
       <File Name="src/demo_page.hpp"/>
       <File Name="src/demo_page.cpp"/>
+      <File Name="src/main_menu_page.hpp"/>
+      <File Name="src/main_menu_page.cpp"/>
     </VirtualDirectory>
     <File Name="src/optional.hpp"/>
   </VirtualDirectory>
