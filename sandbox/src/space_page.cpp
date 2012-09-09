@@ -155,7 +155,7 @@ void SpacePage::update()
 		dir -= Vector::UP;
 	}
 	double speed = 1.0;
-	if (i.down(m_kbTurbo)) {
+	if (!i.down(m_kbTurbo)) {
 		speed = 5.0;
 	}
 	if (dir.x != 0 || dir.y != 0 || dir.z != 0) {
