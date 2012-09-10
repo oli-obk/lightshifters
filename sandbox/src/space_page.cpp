@@ -81,15 +81,18 @@ void SpacePage::draw()
     for (const Bullet& b:m_Bullets) {
         double len = b.dir.magnitude()*b.lifetime;
         Vector dir = b.dir.normalized();
-        for (double d = std::max(0.0, len - b.dir.magnitude()*50.0); d < len; d += 1.0) {
+        double step = 5.0;
+        for (double d = std::max(0.0, len - b.dir.magnitude()*50.0); d < len; d += step) {
             Vector pos1 = m_matGlobalToLocal * (b.pos+Vector(0, 0, 0.1)+(dir*d));
-            Vector pos2 = m_matGlobalToLocal * (b.pos+Vector(0, 0, 0.1)+(dir*(d+1.0)));
+            Vector pos2 = m_matGlobalToLocal * (b.pos+Vector(0, 0, 0.1)+(dir*(d+step)));
             SphericalCoordinate sc = pos1.toSphericalCoordinate();
             SphericalCoordinate sc_prev = pos2.toSphericalCoordinate();
+            // prevent odd lines going through you from your own fire
             if (sc.distance < 10.0) continue;
             if (sc_prev.distance <= 10.0) continue;
             double x1 = Renderable::screenX(sc, wdt);
             double x2 = Renderable::screenX(sc_prev, wdt);
+            // prevent stuff from spanning the screen
             if (std::abs(x1-x2) > 10) continue;
             double y1 = Renderable::screenY(sc, hgt);
             double y2 = Renderable::screenY(sc_prev, hgt);
