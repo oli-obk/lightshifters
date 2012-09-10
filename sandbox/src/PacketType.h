@@ -11,7 +11,8 @@ enum class PacketType : uint8_t
     caught_troll = 0x04,
     scoreboard = 0x05,
     fire_plasma = 0x06,
-    udp_port_update = 0x07
+    udp_port_update = 0x07,
+    create_bullet = 0x08
 };
 
 #endif // PACKETTYPE_H

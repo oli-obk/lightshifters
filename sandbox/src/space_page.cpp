@@ -1,3 +1,5 @@
+#include <Gosu/Audio.hpp>
+#include "spherical_coordinate.h"
 #include <Gosu/Inspection.hpp>
 #include "PacketType.h"
 #include <Gosu/Timing.hpp>
@@ -75,6 +77,25 @@ void SpacePage::draw()
     std::wstringstream ss;
     ss << Gosu::fps();
     m_Font.drawRel(ss.str(), wdt-20, 20, 20, 1.0, 0.0);
+
+    for (const Bullet& b:m_Bullets) {
+        double len = b.dir.magnitude()*b.lifetime;
+        Vector dir = b.dir.normalized();
+        for (double d = std::max(0.0, len - b.dir.magnitude()*50.0); d < len; d += 1.0) {
+            Vector pos1 = m_matGlobalToLocal * (b.pos+Vector(0, 0, 0.1)+(dir*d));
+            Vector pos2 = m_matGlobalToLocal * (b.pos+Vector(0, 0, 0.1)+(dir*(d+1.0)));
+            SphericalCoordinate sc = pos1.toSphericalCoordinate();
+            SphericalCoordinate sc_prev = pos2.toSphericalCoordinate();
+            if (sc.distance < 10.0) continue;
+            if (sc_prev.distance <= 10.0) continue;
+            double x1 = Renderable::screenX(sc, wdt);
+            double x2 = Renderable::screenX(sc_prev, wdt);
+            if (std::abs(x1-x2) > 10) continue;
+            double y1 = Renderable::screenY(sc, hgt);
+            double y2 = Renderable::screenY(sc_prev, hgt);
+            g.drawLine(x1, y1, Gosu::Colors::red, x2, y2, Gosu::Colors::green, 0);
+        }
+    }
 }
 
 void ClosestHud::check(const Renderable& r, Vector pos)
@@ -111,6 +132,18 @@ void SpacePage::rotateDegrees(Vector axis, double angle)
 
 void SpacePage::update()
 {
+    for (size_t i = 0; i < m_Bullets.size(); i++)
+    {
+        Bullet& b = m_Bullets.at(i);
+        b.lifetime++;
+        if (b.lifetime > 200)
+        {
+            m_Bullets[i] = m_Bullets.back();
+            m_Bullets.pop_back();
+            i--;
+        }
+    }
+    
 	Gosu::Input& i = PageManager::Instance()->input();
 
 	if (i.down(m_kbSpinLeft)) {
@@ -195,4 +228,19 @@ void SpacePage::buttonUp(Gosu::Button btn)
         ss << "screenshot" << time(NULL) << ".png";
         PageManager::Instance()->saveScreenShot(ss.str());
     }
+}
+
+void SpacePage::addBullet(Vector pos, Vector dir, PlayerID owner)
+{
+    static optional<Gosu::Sample> s_Sample;
+    if (!s_Sample) {
+        s_Sample.reset(Gosu::Sample(L"sfx/phaser1.wav"));
+    }
+    s_Sample->play();
+    Bullet b;
+    b.pos = pos;
+    b.dir = dir.normalized()*10;
+    b.lifetime = 0;
+    b.owner = owner;
+    m_Bullets.push_back(b);
 }

@@ -82,7 +82,7 @@ public:
     void sendTcpPacketToAll(const Packet& p, PlayerID exclude = InvalidPlayerID);
     void sendUdpPacketTo(const Packet& p, PlayerID player);
     void sendTcpPacketTo(const Packet& p, PlayerID player);
-    void bulletHit(ServerEntity& bullet, Renderable& target);
+    void bulletHit(Bullet bullet, Renderable& target);
     ServerPage(uint16_t port);
     ~ServerPage();
 

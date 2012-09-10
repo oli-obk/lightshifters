@@ -1,6 +1,5 @@
 #include <Gosu/Audio.hpp>
 #include "line.hpp"
-#include "bullet.h"
 #include "PacketType.h"
 #include "server_page.h"
 #include "player.h"
@@ -161,6 +160,24 @@ void ServerPage::update()
         // copy necessary to allow update to delete the entity
         auto entit = it++;
         entit->second->update();
+    }
+    for (const Bullet& b : m_Bullets)
+    {
+        // check for hit
+        Line line(b.pos + b.dir * b.lifetime, b.dir);
+        auto cb = [this, b](ServerEntity& ent) -> bool
+        {
+            // don't hit my player
+            if (ent.getType() == "player") {
+                if (ent.getOwner() == b.owner) {
+                    return true;
+                }
+            }
+            bulletHit(b, ent);
+            // stop
+            return false;
+        };
+        intersect(line, cb);
     }
 }
 
@@ -407,11 +424,11 @@ void ServerPage::intersect(Line& line, std::function<bool(ServerEntity&)> callba
     }
 }
 
-void ServerPage::bulletHit(ServerEntity& bullet, Renderable& target)
+void ServerPage::bulletHit(Bullet bullet, Renderable& target)
 {
     if (target.getType() == "player") {
         auto looser = m_mPlayers.find(target.getOwner());
-        auto winner = m_mPlayers.find(bullet.getOwner());
+        auto winner = m_mPlayers.find(bullet.owner);
         if (looser == m_mPlayers.end()) {
             std::cout << "bullet hit nonexisting player" << std::endl;
             return;
@@ -432,16 +449,16 @@ void ServerPage::bulletHit(ServerEntity& bullet, Renderable& target)
         sendTcpPacketToAll(p2);
     } else if (target.getType() == "troll") {
         eraseEntity(target.getID());
-        auto it = m_mPlayers.find(bullet.getOwner());
+        auto it = m_mPlayers.find(bullet.owner);
         assert(it != m_mPlayers.end());
         PlayerState& state = it->second;
         state.Score++;
         Packet p2;
         p2.write(PacketType::scoreboard);
-        p2.write(bullet.getOwner());
+        p2.write(bullet.owner);
         p2.write(state.Score);
         sendTcpPacketToAll(p2);
-        if (bullet.getOwner() == m_pidMine) {
+        if (bullet.owner == m_pidMine) {
             static optional<Gosu::Sample> s_Sample;
             if (!s_Sample) {
                 s_Sample.reset(Gosu::Sample(L"sfx/catchtroll.wav"));
@@ -453,7 +470,7 @@ void ServerPage::bulletHit(ServerEntity& bullet, Renderable& target)
             sendUdpPacket(p, state);
         }
     }
-    eraseEntity(bullet.getID());
+    bullet.lifetime = -1;
 }
 
 void ServerPage::eraseEntity(EntityMap::iterator it)

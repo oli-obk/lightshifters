@@ -29,8 +29,6 @@
       <File Name="src/line.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="Renderable">
-      <File Name="src/bullet.cpp"/>
-      <File Name="src/bullet.h"/>
       <File Name="src/player.cpp"/>
       <File Name="src/player.h"/>
       <File Name="src/renderable.cpp"/>
@@ -98,6 +96,7 @@
       
       
       
+      
       ]]>
       </Environment>
       <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
@@ -135,6 +134,7 @@
       <General OutputFile="" IntermediateDirectory="/home/oliver/Projects/lightshifters/sandbox/bin" Command="/home/oliver/Projects/lightshifters/sandbox/bin/Sandbox" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[
+      
       
       
       

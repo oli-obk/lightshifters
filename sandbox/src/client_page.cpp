@@ -207,6 +207,13 @@ void ClientPage::onReceiveUdp(Gosu::SocketAddress addr, Gosu::SocketPort port, c
         s_Sample->play();
     }
         break;
+    case PacketType::create_bullet:
+    {
+        Vector pos = p.read<Vector>();
+        Vector dir = p.read<Vector>();
+        PlayerID owner = p.read<PlayerID>();
+        addBullet(pos, dir, owner);
+    }
     default:
         std::cout << "this packet type is unknown or not meant to be sent by udp" << std::endl;
         break;

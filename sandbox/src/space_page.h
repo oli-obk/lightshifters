@@ -56,6 +56,13 @@ struct ClosestHud
     void draw(const Matrix& mat, double wdt, double hgt);
 };
 
+struct Bullet
+{
+    Vector pos, dir;
+    size_t lifetime;
+    PlayerID owner;
+};
+
 class SpacePage : public Page
 {
 private:
@@ -72,6 +79,7 @@ private:
     void refreshMatrix();
     void PlayerPositionChanged();
 protected:
+    std::vector<Bullet> m_Bullets;
 	Gosu::Font m_Font;
 	PlayerID m_pidMine;
     optional<Renderable&> m_PlayerRenderable;
@@ -79,6 +87,7 @@ protected:
     virtual optional<Renderable&> getEntity(RenderableID id) = 0;
     void render(const Renderable&);
 public:
+    void addBullet(Vector pos, Vector dir, PlayerID owner);
 	SpacePage();
 	~SpacePage();
 	virtual void update();
