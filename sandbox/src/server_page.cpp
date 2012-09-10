@@ -161,11 +161,13 @@ void ServerPage::update()
         auto entit = it++;
         entit->second->update();
     }
-    for (const Bullet& b : m_Bullets)
+    for (size_t i = 0; i < m_Bullets.size(); i++)
     {
+        const Bullet& b = m_Bullets.at(i);
         // check for hit
         Line line(b.pos + b.dir * b.lifetime, b.dir);
-        auto cb = [this, b](ServerEntity& ent) -> bool
+        bool stop = false;
+        auto cb = [this, b, &stop](ServerEntity& ent) -> bool
         {
             // don't hit my player
             if (ent.getType() == "player") {
@@ -174,10 +176,16 @@ void ServerPage::update()
                 }
             }
             bulletHit(b, ent);
+            stop = true;
             // stop
             return false;
         };
         intersect(line, cb);
+        if (stop) {
+            m_Bullets[i] = m_Bullets.back();
+            m_Bullets.pop_back();
+            i--;
+        }
     }
 }
 
